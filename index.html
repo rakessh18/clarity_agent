@@ -4,27 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarity AI Agent | Product Intelligence</title>
+    <title>Clarity AI | Product Intelligence</title>
     <!-- React and ReactDOM CDNs -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel CDN for JSX support in browser -->
+    <!-- Babel CDN for JSX support -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Premium Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Professional Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #080a0d;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --accent: #06d6a0;
-            --accent-gradient: linear-gradient(135deg, #06d6a0, #118ab2);
-            --text-main: #e0e0e0;
-            --text-dim: #888;
-            --text-muted: #444;
-            --font-main: 'DM Sans', sans-serif;
-            --font-display: 'Syne', sans-serif;
-            --font-mono: 'DM Mono', monospace;
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.4);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --text-main: #f3f4f6;
+            --text-dim: #9ca3af;
+            --text-muted: #4b5563;
+            --font-main: 'Inter', sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         * {
@@ -40,72 +41,90 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
-            overflow-x: hidden;
+        }
+
+        /* Ambient background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
         .glass-card {
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--card-border);
-            border-radius: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .premium-btn {
             background: var(--accent-gradient);
-            color: #000;
-            font-weight: 700;
+            color: white;
+            font-weight: 600;
             font-family: var(--font-display);
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 12px 24px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.3);
         }
 
         .premium-btn:hover {
             transform: translateY(-1px);
             filter: brightness(1.1);
-            box-shadow: 0 0 20px rgba(6, 214, 160, 0.2);
+            box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
         }
 
         .premium-btn:active { transform: translateY(0); }
-        .premium-btn:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; transform: none; }
+        .premium-btn:disabled { background: #1f2937; color: #6b7280; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .secondary-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             color: var(--text-dim);
-            font-weight: 600;
+            font-weight: 500;
             font-family: var(--font-main);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 10px 20px;
+            border-radius: 8px;
+            padding: 10px 18px;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 13px;
         }
 
         .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
             color: white;
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .input-field {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--card-border);
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            padding: 12px 16px;
-            font-family: var(--font-mono);
+            padding: 12px 14px;
+            font-family: var(--font-main);
             font-size: 14px;
             transition: all 0.2s;
             width: 100%;
@@ -114,49 +133,50 @@
 
         .input-field:focus {
             border-color: var(--accent);
-            background: rgba(6, 214, 160, 0.03);
+            background: rgba(0, 0, 0, 0.3);
             box-shadow: 0 0 0 1px var(--accent);
         }
 
         .data-table-container {
             overflow-x: auto;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid var(--card-border);
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
-            font-family: var(--font-mono);
+            font-size: 13px;
         }
 
         .data-table th {
-            padding: 12px 16px;
+            padding: 14px 16px;
             text-align: left;
             color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid var(--card-border);
-            font-weight: 500;
+            font-weight: 600;
+            font-family: var(--font-display);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            font-size: 11px;
         }
 
         .data-table td {
-            padding: 10px 16px;
+            padding: 12px 16px;
             color: var(--text-dim);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .data-table tr:hover td {
-            background: rgba(255, 255, 255, 0.01);
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-main);
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
     </style>
 </head>
 
@@ -208,18 +228,18 @@
         async function analyzeWithClaude(systemPrompt, clarityData, csvData, history = []) {
             const payload = {
                 clarityData: clarityData,
-                csvSample: csvData?.slice(0, 20) ?? null,
-                metricsSummary: extractStats(clarityData)
+                csvSample: csvData?.slice(0, 15) ?? null,
+                metricsSummary: extractStats(clarityData || csvData)
             };
 
             const messages = history.length > 0 ? history : [{
                 role: "user",
-                content: `Analyze this behavioral data and give me the top 5 most important product improvement ideas: ${JSON.stringify(payload)}`,
+                content: `Analyze this behavioral data and provide 5 strategic product improvements: ${JSON.stringify(payload)}`,
             }];
 
             const body = {
                 model: CLAUDE_MODEL,
-                max_tokens: 1500,
+                max_tokens: 1200,
                 system: systemPrompt,
                 messages: messages,
             };
@@ -249,10 +269,9 @@
             const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
             if (!rows.length) return null;
 
-            let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0, scrollSum = 0, scrollN = 0;
+            let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0;
             
             rows.forEach((r) => {
-                // Handle different potential field names from Clarity API vs CSV
                 const s = parseInt(r.sessions || r.totalSessions || r.sessionsCount || 0);
                 const p = parseInt(r.pageViews || r.totalPageViews || 0);
                 const rc = parseInt(r.rageClicks || r.rageClickCount || (r.metricName === "RageTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
@@ -262,12 +281,8 @@
                 pageViews += p;
                 rageClicks += rc;
                 deadClicks += dc;
-                
-                const sd = parseFloat(r.scrollDepth || r.avgScrollDepth || 0);
-                if (sd > 0) { scrollSum += sd; scrollN++; }
             });
 
-            // Fallback for structured "Traffic" metric from Clarity API
             if (sessions === 0 && Array.isArray(data)) {
                 const traffic = data.find(r => r.metricName === "Traffic")?.information || [];
                 sessions = traffic.reduce((acc, curr) => acc + (parseInt(curr.sessionsCount || curr.totalSessionCount || 0)), 0);
@@ -279,38 +294,35 @@
                 pageViews: pageViews || 0, 
                 rageClicks: rageClicks || 0, 
                 deadClicks: deadClicks || 0, 
-                avgScroll: scrollN ? (scrollSum / scrollN).toFixed(1) : null, 
                 rows: rows.length 
             };
         }
 
-        const SYSTEM_PROMPT = `You are a senior product analyst AI specializing in mobile UX and college application platforms.
-Analyze user behavior data and give sharp, actionable product improvement ideas. Focus on conversion drop-offs and friction points.
-Structure each insight as:
-1. Key insight (what the data shows)
-2. Why it matters
-3. Specific recommendation
-4. Priority: 🔴 Critical / 🟡 Medium / 🟢 Nice-to-have`;
+        const SYSTEM_PROMPT = `You are a senior product analyst specializing in mobile application UX and user behavioral data. 
+Your goal is to identify high-friction points and provide actionable design recommendations.
+Always format your response with:
+1. Analysis of key metrics
+2. Top 5 actionable improvements (Finding -> Why it matters -> Recommendation -> Priority)`;
 
         // ── UI Components ─────────────────────────────────────────────────────────────
         function Stat({ icon, label, value, sub, color }) {
             return (
-                <div className="glass-card" style={{ padding: "20px", flex: 1, borderTop: `3px solid ${color}` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                        <span style={{ fontSize: "20px" }}>{icon}</span>
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
+                <div className="glass-card" style={{ padding: "24px", flex: 1, borderTop: `2px solid ${color}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                        <span style={{ fontSize: "18px" }}>{icon}</span>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-display)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
                     </div>
-                    <div style={{ fontSize: "26px", fontWeight: "800", fontFamily: "var(--font-display)", color: "white" }}>{value}</div>
-                    {sub && <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>{sub}</div>}
+                    <div style={{ fontSize: "28px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white", marginBottom: "4px" }}>{value}</div>
+                    {sub && <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{sub}</div>}
                 </div>
             );
         }
 
         function InsightCard({ text, i }) {
-            const cols = ["#06d6a0", "#118ab2", "#ffd166", "#ef4444", "#a29bfe"];
+            const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
             return (
-                <div className="glass-card" style={{ padding: "20px", marginBottom: "12px", borderLeft: `4px solid ${cols[i % 5]}`, background: "rgba(255,255,255,0.01)" }}>
-                    <p style={{ margin: 0, fontSize: "14px", color: "var(--text-main)", lineHeight: "1.8", whiteSpace: "pre-wrap" }}>{text}</p>
+                <div className="glass-card" style={{ padding: "20px", marginBottom: "14px", borderLeft: `4px solid ${colors[i % 5]}`, background: "rgba(255,255,255,0.01)" }}>
+                    <p style={{ margin: 0, fontSize: "14.5px", color: "var(--text-main)", lineHeight: "1.75", whiteSpace: "pre-wrap" }}>{text}</p>
                 </div>
             );
         }
@@ -318,17 +330,18 @@ Structure each insight as:
         function Bubble({ msg }) {
             const u = msg.role === "user";
             return (
-                <div style={{ display: "flex", justifyContent: u ? "flex-end" : "flex-start", marginBottom: 16 }}>
-                    {!u && <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", marginRight: "10px", marginTop: "4px", flexShrink: 0 }}>✦</div>}
+                <div style={{ display: "flex", justifyContent: u ? "flex-end" : "flex-start", marginBottom: 18 }}>
+                    {!u && <div style={{ width: 30, height: 30, borderRadius: "8px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", marginRight: "12px", flexShrink: 0, marginTop: "2px", boxShadow: "0 4px 12px rgba(99, 102, 241, 0.2)" }}>✦</div>}
                     <div style={{ 
-                        maxWidth: "80%", 
-                        background: u ? "rgba(6, 214, 160, 0.1)" : "rgba(255, 255, 255, 0.04)", 
-                        color: u ? "var(--accent)" : "var(--text-main)",
-                        borderRadius: u ? "16px 4px 16px 16px" : "4px 16px 16px 16px", 
+                        maxWidth: "85%", 
+                        background: u ? "var(--accent)" : "rgba(255, 255, 255, 0.04)", 
+                        color: u ? "white" : "var(--text-main)",
+                        borderRadius: u ? "12px 12px 2px 12px" : "12px 12px 12px 2px", 
                         padding: "12px 18px", 
                         fontSize: "14px", 
-                        lineHeight: "1.7",
-                        border: u ? "1px solid rgba(6, 214, 160, 0.2)" : "1px solid var(--card-border)"
+                        lineHeight: "1.6",
+                        border: u ? "none" : "1px solid var(--card-border)",
+                        boxShadow: u ? "0 4px 12px rgba(99, 102, 241, 0.2)" : "none"
                     }}>
                         {msg.content}
                     </div>
@@ -336,12 +349,11 @@ Structure each insight as:
             );
         }
 
-        function StatusBadge({ connected, label, color }) {
-            const finalColor = color || (connected ? "#10b981" : "#333");
+        function StatusBadge({ active, label, color }) {
             return (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: "20px", border: "1px solid var(--card-border)" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: finalColor, boxShadow: connected ? `0 0 10px ${finalColor}` : "none" }}></div>
-                    <span style={{ fontSize: "11px", fontWeight: "700", color: finalColor, fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>{label}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 14px", background: "rgba(255,255,255,0.03)", borderRadius: "30px", border: "1px solid var(--card-border)" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: active ? color : "#374151", boxShadow: active ? `0 0 10px ${color}` : "none" }}></div>
+                    <span style={{ fontSize: "11px", fontWeight: "600", color: active ? "white" : "var(--text-muted)", fontFamily: "var(--font-display)", textTransform: "uppercase" }}>{label}</span>
                 </div>
             );
         }
@@ -352,7 +364,6 @@ Structure each insight as:
             const [token, setToken] = useState("");
             const [days, setDays] = useState(1);
             const [clarityData, setClarityData] = useState(null);
-            const [rawResponse, setRawResponse] = useState("");
             const [csv, setCsv] = useState(null);
             const [csvName, setCsvName] = useState("");
             const [loading, setLoading] = useState(false);
@@ -367,27 +378,26 @@ Structure each insight as:
 
             useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
 
-            async function connect() {
-                if (!token.trim() && !csv) { setErr("Please enter an API token or upload a CSV."); return; }
+            async function synchronize() {
+                if (!token.trim() && !csv) { setErr("Please provide an API token or upload a CSV file."); return; }
                 setLoading(true); setErr(""); setInsights([]);
-                setLoadingMsg(token.trim() ? "Connecting to Clarity..." : "Processing CSV data...");
+                setLoadingMsg(token.trim() ? "Synchronizing with Clarity..." : "Indexing CSV records...");
                 
                 try {
-                    let dataToAnalyze = null;
+                    let combinedData = csv || null;
                     if (token.trim()) {
                         const cleanToken = token.trim().replace(/^Bearer\s+/i, "");
                         const result = await fetchClarityViaProxy(cleanToken, days);
-                        setRawResponse(result.raw || "");
                         if (result.error && !result.data) {
-                            setErr(`⚠️ API Error: ${result.error.slice(0, 150)}`);
+                            setErr(`Sync Error: ${result.error.slice(0, 120)}`);
                         } else {
                             setClarityData(result.data);
-                            dataToAnalyze = result.data;
+                            combinedData = result.data;
                         }
                     }
 
-                    setLoadingMsg("AI is analyzing behavioral patterns...");
-                    const reply = await analyzeWithClaude(SYSTEM_PROMPT, dataToAnalyze || clarityData, csv);
+                    setLoadingMsg("Claude is generating strategic insights...");
+                    const reply = await analyzeWithClaude(SYSTEM_PROMPT, combinedData, csv);
                     const parts = reply.split(/\n(?=\d+\.)/).filter(Boolean);
                     setInsights(parts.length > 1 ? parts : [reply]);
                     setTab("dashboard");
@@ -399,104 +409,101 @@ Structure each insight as:
                 }
             }
 
-            function handleFile(e) {
+            function handleCSV(e) {
                 const f = e.target.files?.[0]; if (!f) return;
                 setCsvName(f.name);
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const parsed = parseCSV(ev.target.result);
-                    setCsv(parsed);
-                };
+                reader.onload = (ev) => setCsv(parseCSV(ev.target.result));
                 reader.readAsText(f);
             }
 
             const stats = extractStats(clarityData || csv);
-            const isConnected = !!clarityData;
+            const isLive = !!clarityData;
 
             return (
-                <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}>
-                    {/* Header */}
-                    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "40px 0", marginBottom: "20px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", color: "#000" }}>✦</div>
+                <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 30px" }}>
+                    {/* Professional Header */}
+                    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "48px 0 32px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", color: "white", boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)" }}>✧</div>
                             <div>
-                                <h1 style={{ fontSize: "20px", fontWeight: "800", fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>Clarity Agent</h1>
-                                <p style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>/ Intelligence Hub</p>
+                                <h1 style={{ fontSize: "22px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white", letterSpacing: "-0.01em" }}>Clarity Agent</h1>
+                                <p style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-display)", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.05em" }}>Product Intelligence Suite</p>
                             </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                            <nav style={{ display: "flex", gap: "4px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+                            <nav style={{ display: "flex", gap: "6px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
                                 {["setup", "dashboard", "chat"].map(t => (
                                     <button key={t} onClick={() => setTab(t)} style={{ 
-                                        padding: "8px 16px", borderRadius: "8px", border: "none", 
-                                        background: tab === t ? "rgba(255,255,255,0.06)" : "transparent",
+                                        padding: "8px 20px", borderRadius: "9px", border: "none", 
+                                        background: tab === t ? "rgba(255,255,255,0.08)" : "transparent",
                                         color: tab === t ? "white" : "var(--text-dim)",
-                                        fontSize: "13px", fontWeight: "700", cursor: "pointer", transition: "all 0.2s",
-                                        fontFamily: "var(--font-main)"
+                                        fontSize: "13.5px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s",
+                                        fontFamily: "var(--font-display)"
                                     }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
                                 ))}
                             </nav>
-                            <div style={{ display: "flex", gap: "10px" }}>
-                                <StatusBadge connected={isConnected} label={isConnected ? "Live API" : "No API"} />
-                                {csv && <StatusBadge connected={true} label="CSV Loaded" color="#ffd166" />}
+                            <div style={{ display: "flex", gap: "12px" }}>
+                                <StatusBadge active={isLive} label={isLive ? "Live API" : "Offline"} color="#10b981" />
+                                {csv && <StatusBadge active={true} label="CSV Context" color="#f59e0b" />}
                             </div>
                         </div>
                     </header>
 
-                    <main style={{ animation: "fadeIn 0.6s ease-out" }}>
+                    <main style={{ animation: "fadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1)" }}>
                         {/* ── SETUP ── */}
                         {tab === "setup" && (
-                            <div style={{ maxWidth: "560px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
-                                <div className="glass-card" style={{ padding: "40px" }}>
-                                    <h2 style={{ fontSize: "24px", fontWeight: "800", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Connect Data</h2>
-                                    <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "32px" }}>Sync your Microsoft Clarity instance via API token.</p>
+                            <div style={{ maxWidth: "600px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
+                                <div className="glass-card" style={{ padding: "48px" }}>
+                                    <h2 style={{ fontSize: "26px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Configure Agent</h2>
+                                    <p style={{ color: "var(--text-dim)", fontSize: "15px", marginBottom: "40px" }}>Connect your behavioral data sources to begin analysis.</p>
                                     
-                                    <div style={{ marginBottom: "24px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.1em" }}>API Token</label>
-                                        <input className="input-field" type="password" placeholder="Paste your Clarity token" value={token} onChange={(e) => setToken(e.target.value)} />
-                                        <p style={{ marginTop: "8px", fontSize: "11px", color: "var(--text-muted)" }}>Settings → Data Export → Generate new API token</p>
+                                    <div style={{ marginBottom: "32px" }}>
+                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}>API Access Token</label>
+                                        <input className="input-field" type="password" placeholder="Enter Microsoft Clarity Token" value={token} onChange={(e) => setToken(e.target.value)} />
+                                        <p style={{ marginTop: "10px", fontSize: "12px", color: "var(--text-muted)" }}>Settings → Data Export → Generate Token</p>
                                     </div>
 
-                                    <div style={{ marginBottom: "32px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Analysis Window</label>
-                                        <div style={{ display: "flex", gap: "10px" }}>
+                                    <div style={{ marginBottom: "40px" }}>
+                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Timeframe</label>
+                                        <div style={{ display: "flex", gap: "12px" }}>
                                             {[1, 2, 3].map(d => (
                                                 <button key={d} onClick={() => setDays(d)} style={{ 
-                                                    flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid", 
+                                                    flex: 1, padding: "14px", borderRadius: "10px", border: "1px solid", 
                                                     borderColor: days === d ? "var(--accent)" : "var(--card-border)",
-                                                    background: days === d ? "rgba(6, 214, 160, 0.05)" : "transparent",
+                                                    background: days === d ? "var(--accent-glow)" : "transparent",
                                                     color: days === d ? "white" : "var(--text-dim)",
-                                                    fontSize: "13px", fontWeight: "700", cursor: "pointer"
+                                                    fontSize: "14px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s"
                                                 }}>{d === 1 ? "24h" : d === 2 ? "48h" : "72h"}</button>
                                             ))}
                                         </div>
                                     </div>
 
                                     {err && (
-                                        <div style={{ padding: "14px", background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.1)", borderRadius: "10px", marginBottom: "24px", color: "#fca5a5", fontSize: "13px" }}>{err}</div>
+                                        <div style={{ padding: "16px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "10px", marginBottom: "24px", color: "#fca5a5", fontSize: "13.5px" }}>{err}</div>
                                     )}
 
-                                    <button className="premium-btn" style={{ width: "100%" }} onClick={connect} disabled={loading}>
+                                    <button className="premium-btn" style={{ width: "100%", padding: "16px" }} onClick={synchronize} disabled={loading}>
                                         {loading ? (
                                             <>
-                                                <div style={{ width: "14px", height: "14px", border: "2px solid #000", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+                                                <div style={{ width: "16px", height: "16px", border: "2.5px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
                                                 {loadingMsg}
                                             </>
-                                        ) : "Synchronize & Analyze →"}
+                                        ) : "Begin Intelligence Analysis →"}
                                     </button>
                                 </div>
 
-                                <div className="glass-card" style={{ padding: "24px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                                        <span style={{ fontSize: "20px" }}>📂</span>
-                                        <h3 style={{ fontSize: "16px", fontWeight: "800", fontFamily: "var(--font-display)" }}>Historical CSV</h3>
+                                <div className="glass-card" style={{ padding: "32px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+                                        <span style={{ fontSize: "20px" }}>📊</span>
+                                        <h3 style={{ fontSize: "17px", fontWeight: "700", fontFamily: "var(--font-display)" }}>Import Legacy Data</h3>
                                     </div>
-                                    <p style={{ color: "var(--text-dim)", fontSize: "13px", marginBottom: "20px", lineHeight: "1.6" }}>Upload a CSV export for longer time ranges (7-90 days). This acts as a primary source if the API is offline.</p>
-                                    <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleFile} />
-                                    <button className="secondary-btn" style={{ width: "100%" }} onClick={() => fileRef.current?.click()}>
-                                        {csvName ? `✓ ${csvName}` : "Choose CSV File"}
+                                    <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "24px", lineHeight: "1.6" }}>For extended trends (7-90 days), upload a CSV export from your Clarity dashboard. This also serves as a persistent context for the AI consultant.</p>
+                                    <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleCSV} />
+                                    <button className="secondary-btn" style={{ width: "100%", padding: "12px" }} onClick={() => fileRef.current?.click()}>
+                                        {csvName ? `✓ ${csvName}` : "Select CSV Report"}
                                     </button>
-                                    {csv && <p style={{ fontSize: "11px", color: "var(--accent)", marginTop: "10px", textAlign: "center", fontFamily: "var(--font-mono)" }}>{csv.length} rows indexed</p>}
+                                    {csv && <p style={{ fontSize: "12px", color: "var(--accent)", marginTop: "12px", textAlign: "center", fontWeight: "600" }}>{csv.length.toLocaleString()} Records Indexed</p>}
                                 </div>
                             </div>
                         )}
@@ -504,39 +511,54 @@ Structure each insight as:
                         {/* ── DASHBOARD ── */}
                         {tab === "dashboard" && (
                             <div>
-                                {(stats) ? (
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "40px", alignItems: "start" }}>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                                {stats ? (
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "48px", alignItems: "start" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
                                             <section>
-                                                <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Behavioral Pulse</h3>
-                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
-                                                    <Stat icon="👥" label="Total Sessions" value={stats.sessions.toLocaleString()} sub="Active interactions" color="#06d6a0" />
-                                                    <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} sub="Total navigation depth" color="#118ab2" />
-                                                    <Stat icon="🔥" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="High-friction signals" color="#ef4444" />
-                                                    <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="Unresponsive taps" color="#ffd166" />
+                                                <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "18px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Behavioral Overview</h3>
+                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
+                                                    <Stat icon="👥" label="Total Sessions" value={stats.sessions.toLocaleString()} sub="Unique user streams" color="#6366f1" />
+                                                    <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="Unresponsive interactions" color="#f59e0b" />
+                                                    <Stat icon="🔥" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="Frustration triggers" color="#ec4899" />
+                                                    <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} sub="Engagement depth" color="#10b981" />
                                                 </div>
+                                            </section>
+
+                                            <section>
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Strategic Intelligence</h3>
+                                                    <button onClick={synchronize} style={{ fontSize: "11px", background: "transparent", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: "700", fontFamily: "var(--font-display)" }}>RE-RUN ANALYSIS</button>
+                                                </div>
+                                                {insights.length === 0 ? (
+                                                    <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
+                                                        <div style={{ width: "24px", height: "24px", border: "2.5px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 20px" }}></div>
+                                                        <p style={{ color: "var(--text-dim)", fontSize: "15px" }}>Synthesizing behavioral patterns into insights...</p>
+                                                    </div>
+                                                ) : (
+                                                    insights.map((text, i) => <InsightCard key={i} text={text} i={i} />)
+                                                )}
                                             </section>
 
                                             {clarityData && (
                                                 <section>
-                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Live Data Stream</h3>
+                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "18px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Live Dimension Stream</h3>
                                                     <div className="data-table-container">
                                                         <table className="data-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>Metric</th>
-                                                                    <th>Sessions</th>
-                                                                    <th>Friction</th>
-                                                                    <th>Trend</th>
+                                                                    <th>Metric Category</th>
+                                                                    <th>Session Volume</th>
+                                                                    <th>Friction Count</th>
+                                                                    <th>Status</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {clarityData.slice(0, 5).map((row, i) => (
+                                                                {(Array.isArray(clarityData) ? clarityData : []).slice(0, 6).map((row, i) => (
                                                                     <tr key={i}>
-                                                                        <td>{row.metricName || row.Dimension || "Dimension"}</td>
-                                                                        <td>{row.sessionsCount || row.TotalSessions || row.sessions || "—"}</td>
-                                                                        <td>{row.deadClickCount || row.rageClickCount || "—"}</td>
-                                                                        <td><span style={{ color: "#10b981" }}>↑ stable</span></td>
+                                                                        <td style={{ fontWeight: "600", color: "white" }}>{row.metricName || "Dimension"}</td>
+                                                                        <td>{row.sessionsCount || row.TotalSessions || "—"}</td>
+                                                                        <td>{row.deadClickCount || row.rageClickCount || "0"}</td>
+                                                                        <td><span style={{ color: "#10b981", fontSize: "11px", fontWeight: "600" }}>✓ Analyzed</span></td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
@@ -544,45 +566,29 @@ Structure each insight as:
                                                     </div>
                                                 </section>
                                             )}
-
-                                            <section>
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>AI Product Insights</h3>
-                                                    <button onClick={connect} style={{ fontSize: "11px", background: "transparent", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: "700" }}>↺ RE-ANALYZE</button>
-                                                </div>
-                                                {insights.length === 0 ? (
-                                                    <div className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
-                                                        <div style={{ width: "20px", height: "20px", border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }}></div>
-                                                        <p style={{ color: "var(--text-dim)", fontSize: "13px" }}>Analyzing behavioral data patterns...</p>
-                                                    </div>
-                                                ) : (
-                                                    insights.map((text, i) => <InsightCard key={i} text={text} i={i} />)
-                                                )}
-                                            </section>
                                         </div>
 
-                                        <aside className="glass-card" style={{ position: "sticky", top: "20px", padding: "24px", height: "calc(100vh - 140px)", display: "flex", flexDirection: "column" }}>
-                                            <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "20px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strategy Consultant</h3>
-                                            <div style={{ flex: 1, overflowY: "auto", paddingRight: "8px", marginBottom: "20px" }}>
+                                        <aside className="glass-card" style={{ position: "sticky", top: "32px", padding: "30px", height: "calc(100vh - 160px)", display: "flex", flexDirection: "column" }}>
+                                            <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "24px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Strategic Consultant</h3>
+                                            <div style={{ flex: 1, overflowY: "auto", paddingRight: "10px", marginBottom: "24px" }}>
                                                 {chat.length === 0 && (
-                                                    <div style={{ textAlign: "center", paddingTop: "40px", color: "var(--text-muted)" }}>
-                                                        <div style={{ fontSize: "24px", marginBottom: "12px" }}>◎</div>
-                                                        <p style={{ fontSize: "12px" }}>Ask about drop-offs,<br/>funnel friction, or UX ideas.</p>
+                                                    <div style={{ textAlign: "center", paddingTop: "50px", color: "var(--text-muted)" }}>
+                                                        <div style={{ fontSize: "30px", marginBottom: "16px" }}>◎</div>
+                                                        <p style={{ fontSize: "13px", lineHeight: "1.6" }}>Ask Claude about specific<br/>funnel leaks or UX friction.</p>
                                                     </div>
                                                 )}
                                                 {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                                {chatLoading && <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Thinking...</div>}
+                                                {chatLoading && <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", paddingLeft: "42px" }}>Thinking...</div>}
                                                 <div ref={endRef} />
                                             </div>
                                             <div style={{ position: "relative" }}>
-                                                <input className="input-field" placeholder="Ask Claude..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
+                                                <input className="input-field" placeholder="Inquire about behavioral data..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
                                                     if (e.key === "Enter" && chatInput.trim() && !chatLoading) {
-                                                        const userMsg = chatInput.trim();
-                                                        setChatInput("");
-                                                        setChat(prev => [...prev, { role: "user", content: userMsg }]);
+                                                        const msg = chatInput.trim(); setChatInput("");
+                                                        setChat(p => [...p, { role: "user", content: msg }]);
                                                         setChatLoading(true);
-                                                        const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: userMsg }]);
-                                                        setChat(prev => [...prev, { role: "assistant", content: reply }]);
+                                                        const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
+                                                        setChat(p => [...p, { role: "assistant", content: reply }]);
                                                         setChatLoading(false);
                                                     }
                                                 }} />
@@ -590,11 +596,11 @@ Structure each insight as:
                                         </aside>
                                     </div>
                                 ) : (
-                                    <div className="glass-card" style={{ padding: "80px 40px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
-                                        <div style={{ fontSize: "48px", marginBottom: "24px" }}>📡</div>
-                                        <h3 style={{ fontSize: "24px", fontWeight: "800", fontFamily: "var(--font-display)", marginBottom: "12px" }}>No Data Context</h3>
-                                        <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "32px", lineHeight: "1.6" }}>Synchronize with the Clarity API or upload a CSV report in the Setup tab to unlock product insights.</p>
-                                        <button className="premium-btn" onClick={() => setTab("setup")}>Configure Setup →</button>
+                                    <div className="glass-card" style={{ padding: "100px 40px", textAlign: "center", maxWidth: "640px", margin: "60px auto" }}>
+                                        <div style={{ fontSize: "56px", marginBottom: "32px" }}>📡</div>
+                                        <h2 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "14px" }}>Awaiting Data Stream</h2>
+                                        <p style={{ color: "var(--text-dim)", fontSize: "15px", marginBottom: "40px", lineHeight: "1.7" }}>Initialize your connection via the Setup tab to start generating product intelligence from behavioral patterns.</p>
+                                        <button className="premium-btn" onClick={() => setTab("setup")}>Enter Setup Configuration →</button>
                                     </div>
                                 )}
                             </div>
@@ -602,50 +608,48 @@ Structure each insight as:
 
                         {/* ── CHAT ── */}
                         {tab === "chat" && (
-                            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-                                <div className="glass-card" style={{ height: "calc(100vh - 200px)", display: "flex", flexDirection: "column", padding: "32px" }}>
-                                    <div style={{ marginBottom: "24px" }}>
-                                        <h2 style={{ fontSize: "24px", fontWeight: "800", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Strategy Consultant</h2>
-                                        <p style={{ color: "var(--text-dim)", fontSize: "14px" }}>Direct access to the AI agent with full data context.</p>
+                            <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+                                <div className="glass-card" style={{ height: "calc(100vh - 220px)", display: "flex", flexDirection: "column", padding: "40px" }}>
+                                    <div style={{ marginBottom: "32px" }}>
+                                        <h2 style={{ fontSize: "26px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Consulting Agent</h2>
+                                        <p style={{ color: "var(--text-dim)", fontSize: "15px" }}>The full context of your behavioral data is indexed and ready for inquiry.</p>
                                     </div>
                                     
                                     {chat.length === 0 && (
-                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
-                                            {["Where are students dropping off?", "What's causing rage clicks?", "How to improve the search flow?", "Check device friction"].map(q => (
-                                                <button key={q} onClick={() => setChatInput(q)} style={{ padding: "8px 16px", borderRadius: "20px", border: "1px solid var(--card-border)", background: "rgba(255,255,255,0.03)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", transition: "0.2s" }} onMouseEnter={e => e.target.style.color='white'}>{q}</button>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "32px" }}>
+                                            {["Analyze drop-offs", "Identify friction points", "UX improvement ideas", "Device breakdown analysis"].map(q => (
+                                                <button key={q} onClick={() => setChatInput(q)} style={{ padding: "10px 20px", borderRadius: "20px", border: "1px solid var(--card-border)", background: "rgba(255,255,255,0.04)", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", transition: "0.2s" }} onMouseEnter={e => e.target.style.color='white'}>{q}</button>
                                             ))}
                                         </div>
                                     )}
 
-                                    <div style={{ flex: 1, overflowY: "auto", paddingRight: "16px", marginBottom: "24px" }}>
+                                    <div style={{ flex: 1, overflowY: "auto", paddingRight: "16px", marginBottom: "32px" }}>
                                         {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                        {chatLoading && <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Thinking...</div>}
+                                        {chatLoading && <div style={{ fontSize: "13px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", paddingLeft: "42px" }}>Consultant is typing...</div>}
                                         <div ref={endRef} />
                                     </div>
                                     
-                                    <div style={{ display: "flex", gap: "12px" }}>
-                                        <input className="input-field" style={{ padding: "16px 20px", fontSize: "15px", fontFamily: "var(--font-main)" }} placeholder="Type your strategic question..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
+                                    <div style={{ display: "flex", gap: "16px" }}>
+                                        <input className="input-field" style={{ padding: "16px 24px", fontSize: "15px" }} placeholder="Submit your strategic inquiry..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
                                             if (e.key === "Enter" && chatInput.trim() && !chatLoading) {
-                                                const userMsg = chatInput.trim();
-                                                setChatInput("");
-                                                setChat(prev => [...prev, { role: "user", content: userMsg }]);
+                                                const msg = chatInput.trim(); setChatInput("");
+                                                setChat(p => [...p, { role: "user", content: msg }]);
                                                 setChatLoading(true);
-                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: userMsg }]);
-                                                setChat(prev => [...prev, { role: "assistant", content: reply }]);
+                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
+                                                setChat(p => [...p, { role: "assistant", content: reply }]);
                                                 setChatLoading(false);
                                             }
                                         }} />
                                         <button className="premium-btn" onClick={async () => {
-                                             if (chatInput.trim() && !chatLoading) {
-                                                const userMsg = chatInput.trim();
-                                                setChatInput("");
-                                                setChat(prev => [...prev, { role: "user", content: userMsg }]);
+                                            if (chatInput.trim() && !chatLoading) {
+                                                const msg = chatInput.trim(); setChatInput("");
+                                                setChat(p => [...p, { role: "user", content: msg }]);
                                                 setChatLoading(true);
-                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: userMsg }]);
-                                                setChat(prev => [...prev, { role: "assistant", content: reply }]);
+                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
+                                                setChat(p => [...p, { role: "assistant", content: reply }]);
                                                 setChatLoading(false);
                                             }
-                                        }}>Send</button>
+                                        }}>Submit Inquiry</button>
                                     </div>
                                 </div>
                             </div>

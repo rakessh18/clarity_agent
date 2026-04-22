@@ -74,11 +74,13 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
+            const data = await res.json();
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || "Failed to communicate with AI Proxy");
+                // If it's an Anthropic error object { error: { message: "..." } }
+                const msg = data.error?.message || data.error || "Failed to communicate with AI Proxy";
+                throw new Error(msg);
             }
-            return await res.json();
+            return data;
         }
 
         // Step 1: Ask Claude to fetch Clarity data using tool_use (server-side fetch)
@@ -129,7 +131,7 @@ Use the web_search tool to retrieve it. If you cannot fetch it directly, tell me
                 }
                 return { data: null, raw: fullText, error: fullText || "Could not retrieve Clarity data." };
             } catch (e) {
-                return { data: null, raw: "", error: e.message };
+                return { data: null, raw: "", error: e.message || String(e) };
             }
         }
 
@@ -154,7 +156,7 @@ Use the web_search tool to retrieve it. If you cannot fetch it directly, tell me
                 const data = await fetchAIProxy(body);
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
             } catch (e) {
-                return "Error: " + e.message;
+                return "Error: " + (e.message || String(e));
             }
         }
 
@@ -173,7 +175,7 @@ Use the web_search tool to retrieve it. If you cannot fetch it directly, tell me
                 const data = await fetchAIProxy(body);
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
             } catch (e) {
-                return "Error: " + e.message;
+                return "Error: " + (e.message || String(e));
             }
         }
 

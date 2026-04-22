@@ -15,8 +15,18 @@ export default async function handler(req, res) {
         // Handle Clarity Data Fetch
         if (action === 'fetch' && url) {
             const fetchRes = await fetch(url, { headers: customHeaders || {} });
-            const fetchData = await fetchRes.json();
-            return res.status(fetchRes.status).json(fetchData);
+            const contentType = fetchRes.headers.get("content-type");
+            
+            if (contentType && contentType.includes("application/json")) {
+                const fetchData = await fetchRes.json();
+                return res.status(fetchRes.status).json(fetchData);
+            } else {
+                const textData = await fetchRes.text();
+                return res.status(fetchRes.status).json({ 
+                    error: `Clarity API returned non-JSON response (Status ${fetchRes.status})`,
+                    details: textData.slice(0, 500)
+                });
+            }
         }
 
         // Handle Anthropic Analysis

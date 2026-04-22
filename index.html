@@ -83,53 +83,27 @@
             return data;
         }
 
-        // Step 1: Ask Claude to fetch Clarity data using tool_use (server-side fetch)
+        // Step 1: Fetch Clarity data via our proxy
         async function fetchClarityViaClaudeTools(apiToken, numOfDays) {
             const clarityUrl = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
 
-            const body = {
-                model: CLAUDE_MODEL,
-                max_tokens: 4000,
-                tools: [
-                    {
-                        type: "web_search",
-                        name: "web_search",
-                    },
-                ],
-                messages: [
-                    {
-                        role: "user",
-                        content: `Please fetch this URL and return the complete raw JSON response body. Do not summarize — return the full JSON exactly as-is.
-
-URL: ${clarityUrl}
-
-This requires an Authorization header: Bearer ${apiToken}
-
-Use the web_search tool to retrieve it. If you cannot fetch it directly, tell me the exact error.`,
-                    },
-                ],
-            };
-
             try {
-                const data = await fetchAIProxy(body);
-                // Extract all text from response blocks
-                const fullText = (data.content || [])
-                    .map((b) => (b.type === "text" ? b.text : ""))
-                    .filter(Boolean)
-                    .join("\n");
-
-                // Try to parse JSON from within Claude's response
-                const jsonMatch = fullText.match(/```json\n?([\s\S]*?)```/) ||
-                                  fullText.match(/(\[[\s\S]*\])/) ||
-                                  fullText.match(/(\{[\s\S]*\})/);
-
-                if (jsonMatch) {
-                    try {
-                        const parsed = JSON.parse(jsonMatch[1]);
-                        return { data: parsed, raw: jsonMatch[1], error: null };
-                    } catch (_) {}
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "fetch",
+                        url: clarityUrl,
+                        headers: { "Authorization": `Bearer ${apiToken}` }
+                    }),
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to fetch Clarity data");
                 }
-                return { data: null, raw: fullText, error: fullText || "Could not retrieve Clarity data." };
+                
+                return { data: data, raw: JSON.stringify(data), error: null };
             } catch (e) {
                 return { data: null, raw: "", error: e.message || String(e) };
             }

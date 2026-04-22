@@ -4,7 +4,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const body = req.body;
+    const { body, action, url, headers: customHeaders } = req.body;
     const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!apiKey) {
@@ -13,6 +13,23 @@ export default async function handler(req, res) {
         });
     }
 
+    // New: Handle direct fetch requests for external APIs (like Microsoft Clarity)
+    if (action === 'fetch' && url) {
+        try {
+            console.log("Proxy fetching URL:", url);
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: customHeaders || {},
+            });
+            const data = await response.json();
+            return res.status(response.status).json(data);
+        } catch (error) {
+            console.error('Proxy Fetch Error:', error);
+            return res.status(500).json({ error: 'Failed to fetch external URL', details: error.message });
+        }
+    }
+
+    // Standard Anthropic Proxy Logic
     try {
         console.log("Calling Anthropic with model:", body.model);
         // Forward the request to Anthropic's API

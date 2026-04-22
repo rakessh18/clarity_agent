@@ -31,11 +31,12 @@ export default async function handler(req, res) {
 
     // Standard Anthropic Proxy Logic
     try {
-        if (!body || !body.model) {
-            throw new Error("Invalid request body. 'body.model' is required.");
+        const anthropicBody = body || req.body.body;
+        if (!anthropicBody || !anthropicBody.model) {
+            throw new Error("Invalid request: 'body.model' is missing");
         }
-        
-        console.log("Calling Anthropic with model:", body.model);
+
+        console.log("Calling Anthropic with model:", anthropicBody.model);
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -43,21 +44,21 @@ export default async function handler(req, res) {
                 'x-api-key': apiKey,
                 'anthropic-version': '2023-06-01',
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(anthropicBody),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
             return res.status(response.status).json({
-                error: `Anthropic API Error: ${data.error?.message || response.statusText || "Unknown Error"}`,
+                error: `Anthropic Error: ${data.error?.message || response.statusText}`,
                 details: data
             });
         }
 
         res.status(200).json(data);
     } catch (error) {
-        console.error('Proxy Catch Error:', error);
+        console.error('Proxy Error:', error);
         res.status(500).json({ 
             error: 'Failed to communicate with Anthropic API',
             details: error.message 

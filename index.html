@@ -134,8 +134,12 @@
 
             try {
                 const data = await fetchAIProxy(body);
+                if (data.error) {
+                    throw new Error(`${data.error}${data.details ? ": " + JSON.stringify(data.details) : ""}`);
+                }
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
             } catch (e) {
+                console.error("AI Analysis Error:", e);
                 return "Error: " + (e.message || String(e));
             }
         }
@@ -186,10 +190,13 @@
             const rageTaps = rows.find(r => r.metricName === "RageTapCount")?.information || [];
             const engagement = rows.find(r => r.metricName === "EngagementTime")?.information || [];
 
-            const sessions = sumArr(traffic, "sessionsCount") || sumArr(traffic, "TotalSessions") || sumArr(traffic, "totalSessions");
+            let sessions = sumArr(traffic, "totalSessionCount") || sumArr(traffic, "sessionsCount") || sumArr(traffic, "TotalSessions");
+            // FALLBACK: If traffic is 0 but we have clicks, use the session count from clicks
+            if (!sessions) sessions = sumArr(deadTaps, "sessionsCount") || sumArr(rageTaps, "sessionsCount");
+
             const pageViews = sumArr(traffic, "totalPageViews") || sumArr(traffic, "TotalPageViews");
-            const rageClicks = sumArr(rageTaps, "sessionsCount") || sumArr(rageTaps, "Total");
-            const deadClicks = sumArr(deadTaps, "sessionsCount") || sumArr(deadTaps, "Total");
+            const rageClicks = sumArr(rageTaps, "Total") || sumArr(rageTaps, "sessionsCount") || 0;
+            const deadClicks = sumArr(deadTaps, "Total") || sumArr(deadTaps, "sessionsCount") || 0;
             
             if (sessions || pageViews || rageClicks || deadClicks) {
                 let avgScroll = null;

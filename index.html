@@ -303,7 +303,8 @@ Be direct and actionable.`;
 
                 // Step 1: fetch via Claude tools
                 setLoadingMsg("Fetching data from Clarity via Claude…");
-                const result = await fetchClarityViaClaudeTools(token.trim(), days);
+                const cleanToken = token.trim().replace(/^Bearer\s+/i, "");
+                const result = await fetchClarityViaClaudeTools(cleanToken, days);
                 setRawResponse(result.raw || "");
 
                 if (result.error && !result.data) {

@@ -166,6 +166,20 @@
 
         function extractStats(data) {
             if (!data) return null;
+            
+            // Handle Microsoft Clarity API Object structure
+            if (data.Traffic || data.DeadTapCount || data.RageTapCount) {
+                return {
+                    sessions: parseInt(data.Traffic?.TotalSessions || 0),
+                    pageViews: parseInt(data.Traffic?.TotalPageViews || 0),
+                    rageClicks: parseInt(data.RageTapCount?.Total || 0),
+                    deadClicks: parseInt(data.DeadTapCount?.Total || 0),
+                    avgScroll: data.EngagementTime?.AverageScrollDepth ? parseFloat(data.EngagementTime.AverageScrollDepth).toFixed(1) : null,
+                    rows: Object.keys(data).length
+                };
+            }
+
+            // Fallback for CSV or array-based data
             const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
             if (!rows.length) return null;
             let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0, scrollSum = 0, scrollN = 0;
@@ -431,27 +445,45 @@ Be direct and actionable.`;
                                 {/* Stats */}
                                 {stats && (
                                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10, marginBottom: 26 }}>
-                                        <Stat icon="👥" label="Sessions" value={stats.sessions.toLocaleString()} color="#06d6a0" />
-                                        <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} color="#118ab2" />
-                                        <Stat icon="😤" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="frustration signals" color="#ff6b6b" />
-                                        <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="unresponsive taps" color="#ff9f43" />
+                                <Stat icon="👥" label="Sessions" value={stats.sessions.toLocaleString()} color="#06d6a0" />
+                                <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} color="#118ab2" />
+                                <Stat icon="😤" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="frustration signals" color="#ff6b6b" />
+                                <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="unresponsive taps" color="#ff9f43" />
                                         {stats.avgScroll && <Stat icon="📜" label="Avg Scroll" value={`${stats.avgScroll}%`} color="#a29bfe" />}
                                         <Stat icon="📊" label="Data Rows" value={stats.rows} sub="dimension breakdown" color="#ffd166" />
                                     </div>
                                 )}
 
                                 {/* API data table */}
-                                {clarityData && Array.isArray(clarityData) && clarityData.length > 0 && (
+                                {clarityData && (
                                     <div style={{ marginBottom: 24 }}>
                                         <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#333", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Live Clarity Data</div>
                                         <div style={{ overflowX: "auto", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
                                             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
-                                                <thead><tr>{Object.keys(clarityData[0]).slice(0, 8).map((k) => <th key={k} style={{ padding: "8px 12px", textAlign: "left", color: "#3a3a3a", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>{k}</th>)}</tr></thead>
-                                                <tbody>{clarityData.slice(0, 8).map((row, i) => (
-                                                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.025)" }}>
-                                                        {Object.values(row).slice(0, 8).map((v, j) => <td key={j} style={{ padding: "7px 12px", color: "#666" }}>{String(v)}</td>)}
+                                                <thead>
+                                                    <tr style={{ textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                                        <th style={{ padding: "10px 12px", color: "#666" }}>Metric</th>
+                                                        <th style={{ padding: "10px 12px", color: "#666" }}>Value / Details</th>
                                                     </tr>
-                                                ))}</tbody>
+                                                </thead>
+                                                <tbody>
+                                                    {Object.entries(clarityData).slice(0, 20).map(([key, val]) => (
+                                                        <tr key={key} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                                                            <td style={{ padding: "10px 12px", color: "#06d6a0", fontWeight: 600 }}>{key}</td>
+                                                            <td style={{ padding: "10px 12px", color: "#aaa" }}>
+                                                                {typeof val === 'object' ? (
+                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                                        {Object.entries(val).slice(0, 4).map(([k, v]) => (
+                                                                            <span key={k} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 10 }}>
+                                                                                {k}: {typeof v === 'object' ? '...' : v}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : String(val)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
                                             </table>
                                         </div>
                                     </div>

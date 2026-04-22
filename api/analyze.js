@@ -1,42 +1,31 @@
 export default async function handler(req, res) {
-    // Only allow POST requests for analysis and chat
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { body, action, url, headers: customHeaders } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) {
-        return res.status(500).json({
-            error: 'Anthropic API key is missing. Please set the ANTHROPIC_API_KEY environment variable on Vercel.'
-        });
-    }
-
-    // New: Handle direct fetch requests for external APIs (like Microsoft Clarity)
-    if (action === 'fetch' && url) {
-        try {
-            console.log("Proxy fetching URL:", url);
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: customHeaders || {},
-            });
-            const data = await response.json();
-            return res.status(response.status).json(data);
-        } catch (error) {
-            console.error('Proxy Fetch Error:', error);
-            return res.status(500).json({ error: 'Failed to fetch external URL', details: error.message });
-        }
-    }
-
-    // Standard Anthropic Proxy Logic
     try {
-        const anthropicBody = body || req.body.body;
-        if (!anthropicBody || !anthropicBody.model) {
-            throw new Error("Invalid request: 'body.model' is missing");
+        const payload = req.body || {};
+        const { body: anthropicBody, action, url, headers: customHeaders } = payload;
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({ error: 'API Key missing on Vercel environment variables.' });
         }
 
-        console.log("Calling Anthropic with model:", anthropicBody.model);
+        // Handle Clarity Data Fetch
+        if (action === 'fetch' && url) {
+            const fetchRes = await fetch(url, { headers: customHeaders || {} });
+            const fetchData = await fetchRes.json();
+            return res.status(fetchRes.status).json(fetchData);
+        }
+
+        // Handle Anthropic Analysis
+        const finalBody = anthropicBody || payload.body || payload;
+        if (!finalBody || !finalBody.model) {
+            return res.status(400).json({ error: 'Invalid request: No model specified', received: payload });
+        }
+
+        console.log("Proxying to Anthropic...");
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -44,24 +33,24 @@ export default async function handler(req, res) {
                 'x-api-key': apiKey,
                 'anthropic-version': '2023-06-01',
             },
-            body: JSON.stringify(anthropicBody),
+            body: JSON.stringify(finalBody),
         });
 
         const data = await response.json();
-
         if (!response.ok) {
             return res.status(response.status).json({
-                error: `Anthropic Error: ${data.error?.message || response.statusText}`,
+                error: `Anthropic rejected request: ${data.error?.message || response.statusText}`,
                 details: data
             });
         }
 
-        res.status(200).json(data);
+        return res.status(200).json(data);
     } catch (error) {
-        console.error('Proxy Error:', error);
-        res.status(500).json({ 
-            error: 'Failed to communicate with Anthropic API',
-            details: error.message 
+        console.error('SERVER PROXY ERROR:', error);
+        return res.status(500).json({ 
+            error: 'Internal Proxy Error',
+            message: error.message,
+            stack: error.stack
         });
     }
 }

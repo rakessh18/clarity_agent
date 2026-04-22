@@ -135,7 +135,8 @@
             try {
                 const data = await fetchAIProxy(body);
                 if (data.error) {
-                    throw new Error(`${data.error}${data.details ? ": " + JSON.stringify(data.details) : ""}`);
+                    const detailStr = data.message || (data.details ? JSON.stringify(data.details) : "");
+                    throw new Error(`${data.error}${detailStr ? ": " + detailStr : ""}`);
                 }
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
             } catch (e) {

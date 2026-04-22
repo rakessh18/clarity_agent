@@ -114,7 +114,7 @@
             const payload = JSON.stringify({
                 clarityData,
                 csvSample: csvData?.slice(0, 25) ?? null,
-            }, null, 2);
+            }, null, 2).slice(0, 15000);
 
             const body = {
                 model: CLAUDE_MODEL,
@@ -171,21 +171,35 @@
             const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
             if (!rows.length) return null;
 
-            // Search for specific metrics in the array
-            const traffic = rows.find(r => r.metricName === "Traffic")?.information || {};
-            const deadTaps = rows.find(r => r.metricName === "DeadTapCount")?.information || {};
-            const rageTaps = rows.find(r => r.metricName === "RageTapCount")?.information || {};
-            const engagement = rows.find(r => r.metricName === "EngagementTime")?.information || {};
+            // Helper to sum a specific property across an array of objects
+            const sumArr = (arr, prop) => {
+                if (!Array.isArray(arr)) return parseInt(arr?.[prop] || 0);
+                return arr.reduce((acc, curr) => acc + (parseInt(curr[prop]) || 0), 0);
+            };
 
-            if (traffic.TotalSessions || deadTaps.Total || rageTaps.Total) {
-                return {
-                    sessions: parseInt(traffic.TotalSessions || 0),
-                    pageViews: parseInt(traffic.TotalPageViews || 0),
-                    rageClicks: parseInt(rageTaps.Total || 0),
-                    deadClicks: parseInt(deadTaps.Total || 0),
-                    avgScroll: engagement.AverageScrollDepth ? parseFloat(engagement.AverageScrollDepth).toFixed(1) : null,
-                    rows: rows.length
-                };
+            // Search for specific metrics in the array
+            const traffic = rows.find(r => r.metricName === "Traffic")?.information || [];
+            const deadTaps = rows.find(r => r.metricName === "DeadTapCount")?.information || [];
+            const rageTaps = rows.find(r => r.metricName === "RageTapCount")?.information || [];
+            const engagement = rows.find(r => r.metricName === "EngagementTime")?.information || [];
+
+            // If we found the Clarity metrics, sum them up
+            if (traffic.length || deadTaps.length || rageTaps.length) {
+                const sessions = sumArr(traffic, "TotalSessions");
+                const rageClicks = sumArr(rageTaps, "Total");
+                const deadClicks = sumArr(deadTaps, "Total");
+                const pageViews = sumArr(traffic, "TotalPageViews");
+                
+                // For scroll depth, take the average of the averages
+                let avgScroll = null;
+                if (Array.isArray(engagement) && engagement.length > 0) {
+                    const valid = engagement.filter(e => e.AverageScrollDepth > 0);
+                    if (valid.length) {
+                        avgScroll = (valid.reduce((a, b) => a + parseFloat(b.AverageScrollDepth), 0) / valid.length).toFixed(1);
+                    }
+                }
+
+                return { sessions, pageViews, rageClicks, deadClicks, avgScroll, rows: rows.length };
             }
 
             // Fallback for CSV or other array-based data

@@ -84,8 +84,8 @@
         }
 
         // Step 1: Fetch Clarity data via our proxy
-        async function fetchClarityViaClaudeTools(apiToken, numOfDays) {
-            const clarityUrl = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
+        async function fetchClarityViaClaudeTools(apiToken, pid, numOfDays) {
+            const clarityUrl = `https://www.clarity.ms/export-data/api/v1/projects/${pid}/live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
 
             try {
                 const res = await fetch("/api/analyze", {
@@ -279,6 +279,7 @@ Be direct and actionable.`;
         function App() {
             const [tab, setTab] = useState("setup");
             const [token, setToken] = useState("");
+            const [projectId, setProjectId] = useState("");
             const [days, setDays] = useState(1);
             const [clarityData, setClarityData] = useState(null);
             const [rawResponse, setRawResponse] = useState("");
@@ -303,7 +304,7 @@ Be direct and actionable.`;
 
                 // Step 1: fetch via Claude tools
                 setLoadingMsg("Fetching data from Clarity via Claude…");
-                const result = await fetchClarityViaClaudeTools(token.trim(), days);
+                const result = await fetchClarityViaClaudeTools(token.trim(), projectId.trim(), days);
                 setRawResponse(result.raw || "");
 
                 if (result.error && !result.data) {
@@ -396,7 +397,13 @@ Be direct and actionable.`;
                                         <span style={{ fontWeight: 700, fontFamily: "'Syne',sans-serif" }}>Microsoft Clarity API</span>
                                     </div>
 
-                                    <div style={{ marginBottom: 14 }}>
+                                    <div style={{ marginBottom: 18 }}>
+                                        <label style={lbl}>Project ID</label>
+                                        <input style={inp} placeholder="e.g. college-app-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
+                                        <p style={{ margin: "5px 0 0", fontSize: 12, color: "#3a3a3a" }}>Found in Clarity project settings URL</p>
+                                    </div>
+
+                                    <div style={{ marginBottom: 18 }}>
                                         <label style={lbl}>Data Export API Token</label>
                                         <input style={inp} type="password" placeholder="Paste your token here" value={token} onChange={(e) => setToken(e.target.value)} onKeyDown={(e) => e.key === "Enter" && connect()} />
                                         <p style={{ margin: "5px 0 0", fontSize: 12, color: "#3a3a3a" }}>Clarity → Settings → Data Export → Generate new API token</p>

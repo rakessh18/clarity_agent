@@ -31,8 +31,11 @@ export default async function handler(req, res) {
 
     // Standard Anthropic Proxy Logic
     try {
+        if (!body || !body.model) {
+            throw new Error("Invalid request body. 'body.model' is required.");
+        }
+        
         console.log("Calling Anthropic with model:", body.model);
-        // Forward the request to Anthropic's API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -46,12 +49,13 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error("Anthropic Error Status:", response.status);
-            console.error("Anthropic Error Data:", JSON.stringify(data));
+            return res.status(response.status).json({
+                error: `Anthropic API Error: ${data.error?.message || response.statusText || "Unknown Error"}`,
+                details: data
+            });
         }
 
-        // Standard Vercel function response
-        res.status(response.status).json(data);
+        res.status(200).json(data);
     } catch (error) {
         console.error('Proxy Catch Error:', error);
         res.status(500).json({ 

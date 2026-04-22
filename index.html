@@ -173,52 +173,46 @@
         function extractStats(data) {
             if (!data) return null;
             
-            // Handle Microsoft Clarity API Array of Metric Objects structure
             const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
             if (!rows.length) return null;
 
-            // Helper to sum a specific property across an array of objects
             const sumArr = (arr, prop) => {
                 if (!Array.isArray(arr)) return parseInt(arr?.[prop] || 0);
-                return arr.reduce((acc, curr) => acc + (parseInt(curr[prop]) || 0), 0);
+                return arr.reduce((acc, curr) => acc + (parseInt(curr[prop] || curr.sessionsCount || curr.TotalSessions || curr.totalSessions || 0)), 0);
             };
 
-            // Search for specific metrics in the array
             const traffic = rows.find(r => r.metricName === "Traffic")?.information || [];
             const deadTaps = rows.find(r => r.metricName === "DeadTapCount")?.information || [];
             const rageTaps = rows.find(r => r.metricName === "RageTapCount")?.information || [];
             const engagement = rows.find(r => r.metricName === "EngagementTime")?.information || [];
 
-            // If we found the Clarity metrics, sum them up
-            if (traffic.length || deadTaps.length || rageTaps.length) {
-                const sessions = sumArr(traffic, "TotalSessions");
-                const rageClicks = sumArr(rageTaps, "Total");
-                const deadClicks = sumArr(deadTaps, "Total");
-                const pageViews = sumArr(traffic, "TotalPageViews");
-                
-                // For scroll depth, take the average of the averages
+            const sessions = sumArr(traffic, "sessionsCount") || sumArr(traffic, "TotalSessions") || sumArr(traffic, "totalSessions");
+            const pageViews = sumArr(traffic, "totalPageViews") || sumArr(traffic, "TotalPageViews");
+            const rageClicks = sumArr(rageTaps, "sessionsCount") || sumArr(rageTaps, "Total");
+            const deadClicks = sumArr(deadTaps, "sessionsCount") || sumArr(deadTaps, "Total");
+            
+            if (sessions || pageViews || rageClicks || deadClicks) {
                 let avgScroll = null;
                 if (Array.isArray(engagement) && engagement.length > 0) {
-                    const valid = engagement.filter(e => e.AverageScrollDepth > 0);
+                    const valid = engagement.filter(e => e.AverageScrollDepth > 0 || e.activeTime > 0);
                     if (valid.length) {
-                        avgScroll = (valid.reduce((a, b) => a + parseFloat(b.AverageScrollDepth), 0) / valid.length).toFixed(1);
+                        avgScroll = valid[0].AverageScrollDepth || (valid[0].activeTime / 10).toFixed(1);
                     }
                 }
-
                 return { sessions, pageViews, rageClicks, deadClicks, avgScroll, rows: rows.length };
             }
 
             // Fallback for CSV or other array-based data
-            let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0, scrollSum = 0, scrollN = 0;
+            let s = 0, pv = 0, rc = 0, dc = 0, scrollSum = 0, scrollN = 0;
             rows.forEach((r) => {
-                sessions += parseInt(r.sessions || r.totalSessions || 0);
-                pageViews += parseInt(r.pageViews || r.totalPageViews || 0);
-                rageClicks += parseInt(r.rageClicks || r.rageClickCount || 0);
-                deadClicks += parseInt(r.deadClicks || r.deadClickCount || 0);
+                s += parseInt(r.sessions || r.sessionsCount || r.totalSessions || 0);
+                pv += parseInt(r.pageViews || r.totalPageViews || 0);
+                rc += parseInt(r.rageClicks || r.rageClickCount || 0);
+                dc += parseInt(r.deadClicks || r.deadClickCount || 0);
                 const sd = parseFloat(r.scrollDepth || r.avgScrollDepth || 0);
                 if (sd > 0) { scrollSum += sd; scrollN++; }
             });
-            return { sessions, pageViews, rageClicks, deadClicks, avgScroll: scrollN ? (scrollSum / scrollN).toFixed(1) : null, rows: rows.length };
+            return { sessions: s, pageViews: pv, rageClicks: rc, deadClicks: dc, avgScroll: scrollN ? (scrollSum / scrollN).toFixed(1) : null, rows: rows.length };
         }
 
         const SYSTEM_PROMPT = `You are a senior product analyst AI specializing in mobile UX and college application platforms.

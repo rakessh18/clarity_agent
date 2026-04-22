@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarity AI | Product Intelligence</title>
+    <title>Clarity AI | Unified Intelligence</title>
     <!-- React and ReactDOM CDNs -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -28,150 +28,31 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-        }
-
-        /* Ambient background glow */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
-            z-index: -1;
-            pointer-events: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: var(--font-main); line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); z-index: -1; pointer-events: none; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .glass-card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
 
-        .glass-card:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .premium-btn {
-            background: var(--accent-gradient);
-            color: white;
-            font-weight: 600;
-            font-family: var(--font-display);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.3);
-        }
-
-        .premium-btn:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.1);
-            box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
-        }
-
-        .premium-btn:active { transform: translateY(0); }
+        .premium-btn { background: var(--accent-gradient); color: white; font-weight: 600; font-family: var(--font-display); border: none; border-radius: 8px; padding: 12px 24px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.3); }
+        .premium-btn:hover { transform: translateY(-1px); filter: brightness(1.1); box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4); }
         .premium-btn:disabled { background: #1f2937; color: #6b7280; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .secondary-btn {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-dim);
-            font-weight: 500;
-            font-family: var(--font-main);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 10px 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 13px;
-        }
+        .secondary-btn { background: rgba(255, 255, 255, 0.03); color: var(--text-dim); font-weight: 500; font-family: var(--font-main); border: 1px solid var(--card-border); border-radius: 8px; padding: 10px 18px; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+        .secondary-btn:hover { background: rgba(255, 255, 255, 0.07); color: white; border-color: rgba(255, 255, 255, 0.15); }
 
-        .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.07);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.15);
-        }
+        .input-field { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--card-border); border-radius: 8px; color: white; padding: 12px 14px; font-family: var(--font-main); font-size: 14px; transition: all 0.2s; width: 100%; outline: none; }
+        .input-field:focus { border-color: var(--accent); background: rgba(0, 0, 0, 0.3); box-shadow: 0 0 0 1px var(--accent); }
 
-        .input-field {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            color: white;
-            padding: 12px 14px;
-            font-family: var(--font-main);
-            font-size: 14px;
-            transition: all 0.2s;
-            width: 100%;
-            outline: none;
-        }
-
-        .input-field:focus {
-            border-color: var(--accent);
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 0 0 1px var(--accent);
-        }
-
-        .data-table-container {
-            overflow-x: auto;
-            border-radius: 10px;
-            border: 1px solid var(--card-border);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        .data-table th {
-            padding: 14px 16px;
-            text-align: left;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid var(--card-border);
-            font-weight: 600;
-            font-family: var(--font-display);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 11px;
-        }
-
-        .data-table td {
-            padding: 12px 16px;
-            color: var(--text-dim);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .data-table tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--text-main);
-        }
+        .data-table-container { overflow-x: auto; border-radius: 10px; border: 1px solid var(--card-border); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { padding: 14px 16px; text-align: left; color: var(--text-muted); background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border); font-weight: 600; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+        .data-table td { padding: 12px 16px; color: var(--text-dim); border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+        .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: var(--text-main); }
 
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -196,61 +77,72 @@
                 body: JSON.stringify(body),
             });
             const data = await res.json();
-            if (!res.ok) {
-                const msg = data.error?.message || data.error || data.details || JSON.stringify(data);
-                throw new Error(msg);
-            }
+            if (!res.ok) throw new Error(data.error?.message || data.error || "Proxy error");
             return data;
         }
 
         async function fetchClarityViaProxy(apiToken, numOfDays) {
-            const clarityUrl = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
-
+            const url = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
             try {
                 const res = await fetch("/api/analyze", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        action: "fetch",
-                        url: clarityUrl,
-                        headers: { "Authorization": `Bearer ${apiToken}` }
-                    }),
+                    body: JSON.stringify({ action: "fetch", url, headers: { "Authorization": `Bearer ${apiToken}` } }),
                 });
-                
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "Failed to fetch Clarity data");
-                return { data: data, raw: JSON.stringify(data, null, 2), error: null };
-            } catch (e) {
-                return { data: null, raw: "", error: e.message || String(e) };
-            }
+                if (!res.ok) throw new Error(data.error || "Failed Clarity sync");
+                return { data, error: null };
+            } catch (e) { return { data: null, error: e.message }; }
         }
 
-        async function analyzeWithClaude(systemPrompt, clarityData, csvData, history = []) {
+        async function fetchGA4ViaProxy(propertyId, accessToken, numOfDays) {
+            const url = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`;
+            const reportData = {
+                dateRanges: [{ startDate: `${numOfDays}daysAgo`, endDate: "today" }],
+                dimensions: [{ name: "pageTitle" }, { name: "deviceCategory" }],
+                metrics: [{ name: "activeUsers" }, { name: "eventCount" }, { name: "conversions" }, { name: "bounceRate" }]
+            };
+            try {
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        action: "fetch", 
+                        url, 
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                        data: reportData
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Failed GA4 sync");
+                return { data, error: null };
+            } catch (e) { return { data: null, error: e.message }; }
+        }
+
+        async function analyzeWithClaude(systemPrompt, clarityData, csvData, ga4Data, history = []) {
             const payload = {
-                clarityData: clarityData,
-                csvSample: csvData?.slice(0, 15) ?? null,
-                metricsSummary: extractStats(clarityData || csvData)
+                clarity: clarityData,
+                csvSample: csvData?.slice(0, 15),
+                ga4: ga4Data,
+                summary: {
+                    clarityStats: extractStats(clarityData || csvData),
+                    ga4Stats: ga4Data?.rows ? {
+                        users: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[0].value), 0),
+                        conversions: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[2].value), 0)
+                    } : null
+                }
             };
 
             const messages = history.length > 0 ? history : [{
                 role: "user",
-                content: `Analyze this behavioral data and provide 5 strategic product improvements: ${JSON.stringify(payload)}`,
+                content: `Analyze this unified behavioral (Clarity) and traffic (GA4) data. Provide 5 actionable product improvements: ${JSON.stringify(payload)}`,
             }];
 
-            const body = {
-                model: CLAUDE_MODEL,
-                max_tokens: 1200,
-                system: systemPrompt,
-                messages: messages,
-            };
-
             try {
-                const data = await fetchAIProxy(body);
+                const data = await fetchAIProxy({ model: CLAUDE_MODEL, max_tokens: 1500, system: systemPrompt, messages });
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
-            } catch (e) {
-                console.error("AI Analysis Error:", e);
-                return "Error: " + (e.message || String(e));
-            }
+            } catch (e) { return "Error: " + e.message; }
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -268,43 +160,23 @@
             if (!data) return null;
             const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
             if (!rows.length) return null;
-
             let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0;
-            
             rows.forEach((r) => {
-                const s = parseInt(r.sessions || r.totalSessions || r.sessionsCount || 0);
-                const p = parseInt(r.pageViews || r.totalPageViews || 0);
-                const rc = parseInt(r.rageClicks || r.rageClickCount || (r.metricName === "RageTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
-                const dc = parseInt(r.deadClicks || r.deadClickCount || (r.metricName === "DeadTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
-                
-                sessions += s;
-                pageViews += p;
-                rageClicks += rc;
-                deadClicks += dc;
+                sessions += parseInt(r.sessions || r.totalSessions || r.sessionsCount || 0);
+                pageViews += parseInt(r.pageViews || r.totalPageViews || 0);
+                rageClicks += parseInt(r.rageClicks || (r.metricName === "RageTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
+                deadClicks += parseInt(r.deadClicks || (r.metricName === "DeadTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
             });
-
-            if (sessions === 0 && Array.isArray(data)) {
-                const traffic = data.find(r => r.metricName === "Traffic")?.information || [];
-                sessions = traffic.reduce((acc, curr) => acc + (parseInt(curr.sessionsCount || curr.totalSessionCount || 0)), 0);
-                pageViews = traffic.reduce((acc, curr) => acc + (parseInt(curr.totalPageViews || 0)), 0);
-            }
-
-            return { 
-                sessions: sessions || 0, 
-                pageViews: pageViews || 0, 
-                rageClicks: rageClicks || 0, 
-                deadClicks: deadClicks || 0, 
-                rows: rows.length 
-            };
+            return { sessions, pageViews, rageClicks, deadClicks };
         }
 
-        const SYSTEM_PROMPT = `You are a senior product analyst specializing in mobile application UX and user behavioral data. 
-Your goal is to identify high-friction points and provide actionable design recommendations.
-Always format your response with:
-1. Analysis of key metrics
-2. Top 5 actionable improvements (Finding -> Why it matters -> Recommendation -> Priority)`;
+        const SYSTEM_PROMPT = `You are a high-level product consultant. Analyze unified data from Clarity (behavioral) and GA4 (traffic/conversion). 
+Identify correlations (e.g., traffic drop-off in GA4 matching rage clicks in Clarity).
+Structure:
+1. Executive Summary
+2. Top 5 Actionable Recommendations (Finding -> Why -> Fix -> Priority)`;
 
-        // ── UI Components ─────────────────────────────────────────────────────────────
+        // ── Components ────────────────────────────────────────────────────────────────
         function Stat({ icon, label, value, sub, color }) {
             return (
                 <div className="glass-card" style={{ padding: "24px", flex: 1, borderTop: `2px solid ${color}` }}>
@@ -318,33 +190,12 @@ Always format your response with:
             );
         }
 
-        function InsightCard({ text, i }) {
-            const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
-            return (
-                <div className="glass-card" style={{ padding: "20px", marginBottom: "14px", borderLeft: `4px solid ${colors[i % 5]}`, background: "rgba(255,255,255,0.01)" }}>
-                    <p style={{ margin: 0, fontSize: "14.5px", color: "var(--text-main)", lineHeight: "1.75", whiteSpace: "pre-wrap" }}>{text}</p>
-                </div>
-            );
-        }
-
         function Bubble({ msg }) {
             const u = msg.role === "user";
             return (
                 <div style={{ display: "flex", justifyContent: u ? "flex-end" : "flex-start", marginBottom: 18 }}>
-                    {!u && <div style={{ width: 30, height: 30, borderRadius: "8px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", marginRight: "12px", flexShrink: 0, marginTop: "2px", boxShadow: "0 4px 12px rgba(99, 102, 241, 0.2)" }}>✦</div>}
-                    <div style={{ 
-                        maxWidth: "85%", 
-                        background: u ? "var(--accent)" : "rgba(255, 255, 255, 0.04)", 
-                        color: u ? "white" : "var(--text-main)",
-                        borderRadius: u ? "12px 12px 2px 12px" : "12px 12px 12px 2px", 
-                        padding: "12px 18px", 
-                        fontSize: "14px", 
-                        lineHeight: "1.6",
-                        border: u ? "none" : "1px solid var(--card-border)",
-                        boxShadow: u ? "0 4px 12px rgba(99, 102, 241, 0.2)" : "none"
-                    }}>
-                        {msg.content}
-                    </div>
+                    {!u && <div style={{ width: 30, height: 30, borderRadius: "8px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", marginRight: "12px", flexShrink: 0, marginTop: "2px" }}>✦</div>}
+                    <div style={{ maxWidth: "85%", background: u ? "var(--accent)" : "rgba(255, 255, 255, 0.04)", color: u ? "white" : "var(--text-main)", borderRadius: u ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "12px 18px", fontSize: "14px", border: u ? "none" : "1px solid var(--card-border)" }}>{msg.content}</div>
                 </div>
             );
         }
@@ -361,9 +212,12 @@ Always format your response with:
         // ── Main App ──────────────────────────────────────────────────────────────────
         function App() {
             const [tab, setTab] = useState("setup");
-            const [token, setToken] = useState("");
+            const [clarityToken, setClarityToken] = useState("");
+            const [ga4Id, setGa4Id] = useState("");
+            const [ga4Token, setGa4Token] = useState("");
             const [days, setDays] = useState(1);
             const [clarityData, setClarityData] = useState(null);
+            const [ga4Data, setGa4Data] = useState(null);
             const [csv, setCsv] = useState(null);
             const [csvName, setCsvName] = useState("");
             const [loading, setLoading] = useState(false);
@@ -379,278 +233,138 @@ Always format your response with:
             useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
 
             async function synchronize() {
-                if (!token.trim() && !csv) { setErr("Please provide an API token or upload a CSV file."); return; }
                 setLoading(true); setErr(""); setInsights([]);
-                setLoadingMsg(token.trim() ? "Synchronizing with Clarity..." : "Indexing CSV records...");
+                setLoadingMsg("Synchronizing Unified Intelligence...");
                 
                 try {
-                    let combinedData = csv || null;
-                    if (token.trim()) {
-                        const cleanToken = token.trim().replace(/^Bearer\s+/i, "");
-                        const result = await fetchClarityViaProxy(cleanToken, days);
-                        if (result.error && !result.data) {
-                            setErr(`Sync Error: ${result.error.slice(0, 120)}`);
-                        } else {
-                            setClarityData(result.data);
-                            combinedData = result.data;
-                        }
+                    let cData = clarityData;
+                    let gData = ga4Data;
+
+                    if (clarityToken.trim()) {
+                        setLoadingMsg("Syncing Microsoft Clarity...");
+                        const res = await fetchClarityViaProxy(clarityToken.trim(), days);
+                        if (!res.error) { setClarityData(res.data); cData = res.data; }
                     }
 
-                    setLoadingMsg("Claude is generating strategic insights...");
-                    const reply = await analyzeWithClaude(SYSTEM_PROMPT, combinedData, csv);
+                    if (ga4Id.trim() && ga4Token.trim()) {
+                        setLoadingMsg("Syncing GA4 Report...");
+                        const res = await fetchGA4ViaProxy(ga4Id.trim(), ga4Token.trim(), days);
+                        if (!res.error) { setGa4Data(res.data); gData = res.data; }
+                        else { setErr(e => e + " | GA4: " + res.error); }
+                    }
+
+                    setLoadingMsg("Generating 360° AI Analysis...");
+                    const reply = await analyzeWithClaude(SYSTEM_PROMPT, cData, csv, gData);
                     const parts = reply.split(/\n(?=\d+\.)/).filter(Boolean);
                     setInsights(parts.length > 1 ? parts : [reply]);
                     setTab("dashboard");
-                } catch (e) {
-                    setErr(e.message);
-                } finally {
-                    setLoading(false);
-                    setLoadingMsg("");
-                }
+                } catch (e) { setErr(e.message); } finally { setLoading(false); }
             }
 
-            function handleCSV(e) {
-                const f = e.target.files?.[0]; if (!f) return;
-                setCsvName(f.name);
-                const reader = new FileReader();
-                reader.onload = (ev) => setCsv(parseCSV(ev.target.result));
-                reader.readAsText(f);
-            }
-
-            const stats = extractStats(clarityData || csv);
-            const isLive = !!clarityData;
+            const cStats = extractStats(clarityData || csv);
+            const gStats = ga4Data?.rows ? {
+                users: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[0].value), 0),
+                conversions: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[2].value), 0),
+                bounce: (ga4Data.rows.reduce((a, b) => a + parseFloat(b.metricValues[3].value), 0) / ga4Data.rows.length * 100).toFixed(1)
+            } : null;
 
             return (
-                <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 30px" }}>
-                    {/* Professional Header */}
+                <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 30px" }}>
                     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "48px 0 32px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", color: "white", boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)" }}>✧</div>
+                            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", color: "white" }}>✧</div>
                             <div>
-                                <h1 style={{ fontSize: "22px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white", letterSpacing: "-0.01em" }}>Clarity Agent</h1>
-                                <p style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-display)", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.05em" }}>Product Intelligence Suite</p>
+                                <h1 style={{ fontSize: "22px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white" }}>Clarity Agent</h1>
+                                <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Unified Analytics Hub</p>
                             </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
                             <nav style={{ display: "flex", gap: "6px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
                                 {["setup", "dashboard", "chat"].map(t => (
-                                    <button key={t} onClick={() => setTab(t)} style={{ 
-                                        padding: "8px 20px", borderRadius: "9px", border: "none", 
-                                        background: tab === t ? "rgba(255,255,255,0.08)" : "transparent",
-                                        color: tab === t ? "white" : "var(--text-dim)",
-                                        fontSize: "13.5px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s",
-                                        fontFamily: "var(--font-display)"
-                                    }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+                                    <button key={t} onClick={() => setTab(t)} style={{ padding: "8px 20px", borderRadius: "9px", border: "none", background: tab === t ? "rgba(255,255,255,0.08)" : "transparent", color: tab === t ? "white" : "var(--text-dim)", fontSize: "13.5px", fontWeight: "600", cursor: "pointer" }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
                                 ))}
                             </nav>
                             <div style={{ display: "flex", gap: "12px" }}>
-                                <StatusBadge active={isLive} label={isLive ? "Live API" : "Offline"} color="#10b981" />
-                                {csv && <StatusBadge active={true} label="CSV Context" color="#f59e0b" />}
+                                <StatusBadge active={!!clarityData} label="Clarity" color="#10b981" />
+                                <StatusBadge active={!!ga4Data} label="GA4" color="#6366f1" />
+                                <StatusBadge active={!!csv} label="CSV" color="#f59e0b" />
                             </div>
                         </div>
                     </header>
 
-                    <main style={{ animation: "fadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-                        {/* ── SETUP ── */}
+                    <main style={{ animation: "fadeIn 0.7s ease-out" }}>
                         {tab === "setup" && (
-                            <div style={{ maxWidth: "600px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
-                                <div className="glass-card" style={{ padding: "48px" }}>
-                                    <h2 style={{ fontSize: "26px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Configure Agent</h2>
-                                    <p style={{ color: "var(--text-dim)", fontSize: "15px", marginBottom: "40px" }}>Connect your behavioral data sources to begin analysis.</p>
-                                    
-                                    <div style={{ marginBottom: "32px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}>API Access Token</label>
-                                        <input className="input-field" type="password" placeholder="Enter Microsoft Clarity Token" value={token} onChange={(e) => setToken(e.target.value)} />
-                                        <p style={{ marginTop: "10px", fontSize: "12px", color: "var(--text-muted)" }}>Settings → Data Export → Generate Token</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+                                <div className="glass-card" style={{ padding: "40px" }}>
+                                    <h2 style={{ fontSize: "20px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "24px" }}>Microsoft Clarity</h2>
+                                    <div style={{ marginBottom: "20px" }}>
+                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>API Token</label>
+                                        <input className="input-field" type="password" value={clarityToken} onChange={e => setClarityToken(e.target.value)} placeholder="Clarity Data Export Token" />
                                     </div>
-
-                                    <div style={{ marginBottom: "40px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Timeframe</label>
-                                        <div style={{ display: "flex", gap: "12px" }}>
-                                            {[1, 2, 3].map(d => (
-                                                <button key={d} onClick={() => setDays(d)} style={{ 
-                                                    flex: 1, padding: "14px", borderRadius: "10px", border: "1px solid", 
-                                                    borderColor: days === d ? "var(--accent)" : "var(--card-border)",
-                                                    background: days === d ? "var(--accent-glow)" : "transparent",
-                                                    color: days === d ? "white" : "var(--text-dim)",
-                                                    fontSize: "14px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s"
-                                                }}>{d === 1 ? "24h" : d === 2 ? "48h" : "72h"}</button>
-                                            ))}
-                                        </div>
+                                    <div className="secondary-btn" style={{ width: "100%", textAlign: "center" }} onClick={() => fileRef.current?.click()}>
+                                        {csvName ? `✓ ${csvName}` : "Or Upload Historical CSV"}
                                     </div>
-
-                                    {err && (
-                                        <div style={{ padding: "16px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "10px", marginBottom: "24px", color: "#fca5a5", fontSize: "13.5px" }}>{err}</div>
-                                    )}
-
-                                    <button className="premium-btn" style={{ width: "100%", padding: "16px" }} onClick={synchronize} disabled={loading}>
-                                        {loading ? (
-                                            <>
-                                                <div style={{ width: "16px", height: "16px", border: "2.5px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
-                                                {loadingMsg}
-                                            </>
-                                        ) : "Begin Intelligence Analysis →"}
-                                    </button>
+                                    <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={e => {
+                                        const f = e.target.files[0]; setCsvName(f.name);
+                                        const r = new FileReader(); r.onload = ev => setCsv(parseCSV(ev.target.result)); r.readAsText(f);
+                                    }} />
                                 </div>
 
-                                <div className="glass-card" style={{ padding: "32px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-                                        <span style={{ fontSize: "20px" }}>📊</span>
-                                        <h3 style={{ fontSize: "17px", fontWeight: "700", fontFamily: "var(--font-display)" }}>Import Legacy Data</h3>
+                                <div className="glass-card" style={{ padding: "40px" }}>
+                                    <h2 style={{ fontSize: "20px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "24px" }}>Google Analytics 4</h2>
+                                    <div style={{ marginBottom: "16px" }}>
+                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Property ID</label>
+                                        <input className="input-field" value={ga4Id} onChange={e => setGa4Id(e.target.value)} placeholder="e.g. 123456789" />
                                     </div>
-                                    <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "24px", lineHeight: "1.6" }}>For extended trends (7-90 days), upload a CSV export from your Clarity dashboard. This also serves as a persistent context for the AI consultant.</p>
-                                    <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={handleCSV} />
-                                    <button className="secondary-btn" style={{ width: "100%", padding: "12px" }} onClick={() => fileRef.current?.click()}>
-                                        {csvName ? `✓ ${csvName}` : "Select CSV Report"}
+                                    <div>
+                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Access Token</label>
+                                        <input className="input-field" type="password" value={ga4Token} onChange={e => setGa4Token(e.target.value)} placeholder="OAuth2 Access Token" />
+                                    </div>
+                                </div>
+
+                                <div className="glass-card" style={{ gridColumn: "span 2", padding: "32px", textAlign: "center" }}>
+                                    <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "20px" }}>Select analysis window and begin unified intelligence processing.</p>
+                                    <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "24px" }}>
+                                        {[1, 7, 30].map(d => (
+                                            <button key={d} onClick={() => setDays(d)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid", borderColor: days === d ? "var(--accent)" : "var(--card-border)", background: days === d ? "var(--accent-glow)" : "transparent", color: days === d ? "white" : "var(--text-dim)", cursor: "pointer" }}>{d}d</button>
+                                        ))}
+                                    </div>
+                                    {err && <p style={{ color: "#fca5a5", fontSize: "13px", marginBottom: "20px" }}>{err}</p>}
+                                    <button className="premium-btn" style={{ width: "400px" }} onClick={synchronize} disabled={loading}>
+                                        {loading ? loadingMsg : "Start Unified Analysis →"}
                                     </button>
-                                    {csv && <p style={{ fontSize: "12px", color: "var(--accent)", marginTop: "12px", textAlign: "center", fontWeight: "600" }}>{csv.length.toLocaleString()} Records Indexed</p>}
                                 </div>
                             </div>
                         )}
 
-                        {/* ── DASHBOARD ── */}
                         {tab === "dashboard" && (
-                            <div>
-                                {stats ? (
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "48px", alignItems: "start" }}>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
-                                            <section>
-                                                <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "18px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Behavioral Overview</h3>
-                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-                                                    <Stat icon="👥" label="Total Sessions" value={stats.sessions.toLocaleString()} sub="Unique user streams" color="#6366f1" />
-                                                    <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="Unresponsive interactions" color="#f59e0b" />
-                                                    <Stat icon="🔥" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="Frustration triggers" color="#ec4899" />
-                                                    <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} sub="Engagement depth" color="#10b981" />
-                                                </div>
-                                            </section>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
+                                    <Stat icon="👥" label="Live Users (GA4)" value={gStats?.users.toLocaleString() || "—"} sub="Active on platform" color="#6366f1" />
+                                    <Stat icon="🎯" label="Conversions" value={gStats?.conversions.toLocaleString() || "—"} sub={`${gStats?.bounce || 0}% Bounce Rate`} color="#8b5cf6" />
+                                    <Stat icon="😤" label="Rage Clicks (Clarity)" value={cStats?.rageClicks.toLocaleString() || "—"} sub="Friction signals" color="#ec4899" />
+                                    <Stat icon="🖱️" label="Dead Clicks" value={cStats?.deadClicks.toLocaleString() || "—"} sub="UX dead ends" color="#f59e0b" />
+                                </div>
 
-                                            <section>
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Strategic Intelligence</h3>
-                                                    <button onClick={synchronize} style={{ fontSize: "11px", background: "transparent", border: "none", color: "var(--accent)", cursor: "pointer", fontWeight: "700", fontFamily: "var(--font-display)" }}>RE-RUN ANALYSIS</button>
-                                                </div>
-                                                {insights.length === 0 ? (
-                                                    <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
-                                                        <div style={{ width: "24px", height: "24px", border: "2.5px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 20px" }}></div>
-                                                        <p style={{ color: "var(--text-dim)", fontSize: "15px" }}>Synthesizing behavioral patterns into insights...</p>
-                                                    </div>
-                                                ) : (
-                                                    insights.map((text, i) => <InsightCard key={i} text={text} i={i} />)
-                                                )}
-                                            </section>
-
-                                            {clarityData && (
-                                                <section>
-                                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "18px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Live Dimension Stream</h3>
-                                                    <div className="data-table-container">
-                                                        <table className="data-table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Metric Category</th>
-                                                                    <th>Session Volume</th>
-                                                                    <th>Friction Count</th>
-                                                                    <th>Status</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {(Array.isArray(clarityData) ? clarityData : []).slice(0, 6).map((row, i) => (
-                                                                    <tr key={i}>
-                                                                        <td style={{ fontWeight: "600", color: "white" }}>{row.metricName || "Dimension"}</td>
-                                                                        <td>{row.sessionsCount || row.TotalSessions || "—"}</td>
-                                                                        <td>{row.deadClickCount || row.rageClickCount || "0"}</td>
-                                                                        <td><span style={{ color: "#10b981", fontSize: "11px", fontWeight: "600" }}>✓ Analyzed</span></td>
-                                                                    </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </section>
-                                            )}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "40px" }}>
+                                    <section>
+                                        <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° AI Recommendations</h3>
+                                        {insights.length === 0 ? <p style={{ color: "var(--text-dim)" }}>Synchronize data to see unified insights.</p> : insights.map((t, i) => <div key={i} className="glass-card" style={{ padding: "20px", marginBottom: "14px", borderLeft: "4px solid var(--accent)" }}>{t}</div>)}
+                                    </section>
+                                    <aside className="glass-card" style={{ padding: "24px", height: "500px", display: "flex", flexDirection: "column" }}>
+                                        <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "20px", textTransform: "uppercase" }}>Unified Consultant</h3>
+                                        <div style={{ flex: 1, overflowY: "auto", marginBottom: "20px" }}>
+                                            {chat.map((m, i) => <Bubble key={i} msg={m} />)}
+                                            <div ref={endRef} />
                                         </div>
-
-                                        <aside className="glass-card" style={{ position: "sticky", top: "32px", padding: "30px", height: "calc(100vh - 160px)", display: "flex", flexDirection: "column" }}>
-                                            <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "24px", textTransform: "uppercase", letterSpacing: "0.15em" }}>Strategic Consultant</h3>
-                                            <div style={{ flex: 1, overflowY: "auto", paddingRight: "10px", marginBottom: "24px" }}>
-                                                {chat.length === 0 && (
-                                                    <div style={{ textAlign: "center", paddingTop: "50px", color: "var(--text-muted)" }}>
-                                                        <div style={{ fontSize: "30px", marginBottom: "16px" }}>◎</div>
-                                                        <p style={{ fontSize: "13px", lineHeight: "1.6" }}>Ask Claude about specific<br/>funnel leaks or UX friction.</p>
-                                                    </div>
-                                                )}
-                                                {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                                {chatLoading && <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", paddingLeft: "42px" }}>Thinking...</div>}
-                                                <div ref={endRef} />
-                                            </div>
-                                            <div style={{ position: "relative" }}>
-                                                <input className="input-field" placeholder="Inquire about behavioral data..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
-                                                    if (e.key === "Enter" && chatInput.trim() && !chatLoading) {
-                                                        const msg = chatInput.trim(); setChatInput("");
-                                                        setChat(p => [...p, { role: "user", content: msg }]);
-                                                        setChatLoading(true);
-                                                        const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
-                                                        setChat(p => [...p, { role: "assistant", content: reply }]);
-                                                        setChatLoading(false);
-                                                    }
-                                                }} />
-                                            </div>
-                                        </aside>
-                                    </div>
-                                ) : (
-                                    <div className="glass-card" style={{ padding: "100px 40px", textAlign: "center", maxWidth: "640px", margin: "60px auto" }}>
-                                        <div style={{ fontSize: "56px", marginBottom: "32px" }}>📡</div>
-                                        <h2 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "14px" }}>Awaiting Data Stream</h2>
-                                        <p style={{ color: "var(--text-dim)", fontSize: "15px", marginBottom: "40px", lineHeight: "1.7" }}>Initialize your connection via the Setup tab to start generating product intelligence from behavioral patterns.</p>
-                                        <button className="premium-btn" onClick={() => setTab("setup")}>Enter Setup Configuration →</button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* ── CHAT ── */}
-                        {tab === "chat" && (
-                            <div style={{ maxWidth: "860px", margin: "0 auto" }}>
-                                <div className="glass-card" style={{ height: "calc(100vh - 220px)", display: "flex", flexDirection: "column", padding: "40px" }}>
-                                    <div style={{ marginBottom: "32px" }}>
-                                        <h2 style={{ fontSize: "26px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "8px" }}>Consulting Agent</h2>
-                                        <p style={{ color: "var(--text-dim)", fontSize: "15px" }}>The full context of your behavioral data is indexed and ready for inquiry.</p>
-                                    </div>
-                                    
-                                    {chat.length === 0 && (
-                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "32px" }}>
-                                            {["Analyze drop-offs", "Identify friction points", "UX improvement ideas", "Device breakdown analysis"].map(q => (
-                                                <button key={q} onClick={() => setChatInput(q)} style={{ padding: "10px 20px", borderRadius: "20px", border: "1px solid var(--card-border)", background: "rgba(255,255,255,0.04)", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", transition: "0.2s" }} onMouseEnter={e => e.target.style.color='white'}>{q}</button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div style={{ flex: 1, overflowY: "auto", paddingRight: "16px", marginBottom: "32px" }}>
-                                        {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                        {chatLoading && <div style={{ fontSize: "13px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", paddingLeft: "42px" }}>Consultant is typing...</div>}
-                                        <div ref={endRef} />
-                                    </div>
-                                    
-                                    <div style={{ display: "flex", gap: "16px" }}>
-                                        <input className="input-field" style={{ padding: "16px 24px", fontSize: "15px" }} placeholder="Submit your strategic inquiry..." value={chatInput} disabled={chatLoading} onChange={(e) => setChatInput(e.target.value)} onKeyDown={async (e) => {
-                                            if (e.key === "Enter" && chatInput.trim() && !chatLoading) {
-                                                const msg = chatInput.trim(); setChatInput("");
-                                                setChat(p => [...p, { role: "user", content: msg }]);
-                                                setChatLoading(true);
-                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
-                                                setChat(p => [...p, { role: "assistant", content: reply }]);
-                                                setChatLoading(false);
+                                        <input className="input-field" placeholder="Ask about combined data..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={async e => {
+                                            if (e.key === "Enter" && chatInput.trim()) {
+                                                const m = chatInput; setChatInput(""); setChat(p => [...p, { role: "user", content: m }]);
+                                                const r = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, ga4Data, [...chat, { role: "user", content: m }]);
+                                                setChat(p => [...p, { role: "assistant", content: r }]);
                                             }
                                         }} />
-                                        <button className="premium-btn" onClick={async () => {
-                                            if (chatInput.trim() && !chatLoading) {
-                                                const msg = chatInput.trim(); setChatInput("");
-                                                setChat(p => [...p, { role: "user", content: msg }]);
-                                                setChatLoading(true);
-                                                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, [...chat, { role: "user", content: msg }]);
-                                                setChat(p => [...p, { role: "assistant", content: reply }]);
-                                                setChatLoading(false);
-                                            }
-                                        }}>Submit Inquiry</button>
-                                    </div>
+                                    </aside>
                                 </div>
                             </div>
                         )}
@@ -663,5 +377,4 @@ Always format your response with:
         root.render(<App />);
     </script>
 </body>
-
 </html>

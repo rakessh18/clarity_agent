@@ -14,6 +14,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log("Calling Anthropic with model:", body.model);
         // Forward the request to Anthropic's API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -27,10 +28,18 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
+        if (!response.ok) {
+            console.error("Anthropic Error Status:", response.status);
+            console.error("Anthropic Error Data:", JSON.stringify(data));
+        }
+
         // Standard Vercel function response
         res.status(response.status).json(data);
     } catch (error) {
-        console.error('Proxy Error:', error);
-        res.status(500).json({ error: 'Failed to communicate with Anthropic API: ' + error.message });
+        console.error('Proxy Catch Error:', error);
+        res.status(500).json({ 
+            error: 'Failed to communicate with Anthropic API',
+            details: error.message 
+        });
     }
 }

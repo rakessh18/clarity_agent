@@ -77,7 +77,7 @@
             const data = await res.json();
             if (!res.ok) {
                 // If it's an Anthropic error object { error: { message: "..." } }
-                const msg = data.error?.message || data.error || "Failed to communicate with AI Proxy";
+                const msg = data.error?.message || data.error || data.details || JSON.stringify(data);
                 throw new Error(msg);
             }
             return data;

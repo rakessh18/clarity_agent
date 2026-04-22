@@ -4,103 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarity AI Agent | Sleek Midnight</title>
+    <title>Clarity AI Agent | Product Intelligence</title>
     <!-- React and ReactDOM CDNs -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <!-- Babel CDN for JSX support in browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
         :root {
-            --bg-deep: #0b0f19;
-            --bg-card: rgba(255, 255, 255, 0.04);
-            --primary: #6366f1;
-            --secondary: #10b981;
-            --accent: #3b82f6;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
+            --bg-deep: #080a0d;
+            --primary: #06d6a0;
+            --secondary: #118ab2;
+            --accent: #ffd166;
+            --text-main: #e0e0e0;
+            --text-muted: #555;
+            --border: rgba(255, 255, 255, 0.07);
         }
 
         body {
             margin: 0;
             padding: 0;
             background: var(--bg-deep);
-            background-image:
-                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'DM Sans', sans-serif;
             min-height: 100vh;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-family: 'Outfit', sans-serif;
-            font-size: 14px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        .nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-        }
-
-        .nav-btn.active {
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--primary);
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -126,70 +67,117 @@
 
         const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
 
+        // Helper to call our serverless proxy instead of Anthropic directly (to avoid CORS)
+        async function fetchAIProxy(body) {
+            const res = await fetch("/api/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "Failed to communicate with AI Proxy");
+            }
+            return await res.json();
+        }
+
+        // Step 1: Ask Claude to fetch Clarity data using tool_use (server-side fetch)
         async function fetchClarityViaClaudeTools(apiToken, numOfDays) {
             const clarityUrl = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
+
             const body = {
                 model: CLAUDE_MODEL,
                 max_tokens: 4000,
-                tools: [{ type: "web_search", name: "web_search" }],
+                tools: [
+                    {
+                        type: "web_search",
+                        name: "web_search",
+                    },
+                ],
+                messages: [
+                    {
+                        role: "user",
+                        content: `Please fetch this URL and return the complete raw JSON response body. Do not summarize — return the full JSON exactly as-is.
+
+URL: ${clarityUrl}
+
+This requires an Authorization header: Bearer ${apiToken}
+
+Use the web_search tool to retrieve it. If you cannot fetch it directly, tell me the exact error.`,
+                    },
+                ],
+            };
+
+            try {
+                const data = await fetchAIProxy(body);
+                // Extract all text from response blocks
+                const fullText = (data.content || [])
+                    .map((b) => (b.type === "text" ? b.text : ""))
+                    .filter(Boolean)
+                    .join("\n");
+
+                // Try to parse JSON from within Claude's response
+                const jsonMatch = fullText.match(/```json\n?([\s\S]*?)```/) ||
+                                  fullText.match(/(\[[\s\S]*\])/) ||
+                                  fullText.match(/(\{[\s\S]*\})/);
+
+                if (jsonMatch) {
+                    try {
+                        const parsed = JSON.parse(jsonMatch[1]);
+                        return { data: parsed, raw: jsonMatch[1], error: null };
+                    } catch (_) {}
+                }
+                return { data: null, raw: fullText, error: fullText || "Could not retrieve Clarity data." };
+            } catch (e) {
+                return { data: null, raw: "", error: e.message };
+            }
+        }
+
+        // Step 2: Ask Claude to analyze the data and return insights
+        async function analyzeWithClaude(systemPrompt, clarityData, csvData) {
+            const payload = JSON.stringify({
+                clarityData,
+                csvSample: csvData?.slice(0, 25) ?? null,
+            }, null, 2);
+
+            const body = {
+                model: CLAUDE_MODEL,
+                max_tokens: 1500,
+                system: systemPrompt,
                 messages: [{
                     role: "user",
-                    content: `Please fetch this URL and return the complete raw JSON response body. URL: ${clarityUrl}. Auth: Bearer ${apiToken}. Use the web_search tool.`
-                }]
+                    content: `Here is Microsoft Clarity behavioral data for my college application mobile app:\n\n${payload}\n\nGive me the top 5 most important product improvement ideas. Be specific and actionable.`,
+                }],
             };
-            try {
-                const res = await fetch("/api/analyze", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body),
-                });
-                const data = await res.json();
-                const fullText = (data.content || []).map((b) => (b.type === "text" ? b.text : "")).filter(Boolean).join("\n");
-                const jsonMatch = fullText.match(/```json\n?([\s\S]*?)```/) || fullText.match(/(\[[\s\S]*\])/) || fullText.match(/(\{[\s\S]*\})/);
-                if (jsonMatch) return { data: JSON.parse(jsonMatch[1]), raw: jsonMatch[1], error: null };
-                return { data: null, raw: fullText, error: fullText || "Could not retrieve Clarity data." };
-            } catch (e) { return { data: null, raw: "", error: e.message }; }
-        }
 
-        async function analyzeWithClaude(systemPrompt, clarityData, csvData) {
-            const payload = JSON.stringify({ clarityData, csvSample: csvData?.slice(0, 25) ?? null }, null, 2);
             try {
-                const res = await fetch("/api/analyze", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: CLAUDE_MODEL,
-                        max_tokens: 1500,
-                        system: systemPrompt,
-                        messages: [{
-                            role: "user",
-                            content: `Here is Microsoft Clarity behavioral data for my college application mobile app:\n\n${payload}\n\nGive me the top 5 most important product improvement ideas. Be specific and actionable.`,
-                        }],
-                    }),
-                });
-                const data = await res.json();
+                const data = await fetchAIProxy(body);
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
-            } catch (e) { return "Error: " + e.message; }
+            } catch (e) {
+                return "Error: " + e.message;
+            }
         }
 
+        // Step 3: Chat with context
         async function chatWithClaude(systemPrompt, userMessage, history, clarityData, csvData) {
-            const ctx = `\n\nClarity data:\n${JSON.stringify({ clarityData, csvSample: csvData?.slice(0, 15) }, null, 2)}`;
+            const ctx = `\n\nCurrent Clarity data:\n${JSON.stringify({ clarityData, csvSample: csvData?.slice(0, 15) }, null, 2)}`;
+
+            const body = {
+                model: CLAUDE_MODEL,
+                max_tokens: 1000,
+                system: systemPrompt + ctx,
+                messages: [...history, { role: "user", content: userMessage }],
+            };
+
             try {
-                const res = await fetch("/api/analyze", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: CLAUDE_MODEL,
-                        max_tokens: 1000,
-                        system: systemPrompt + ctx,
-                        messages: [...history, { role: "user", content: userMessage }],
-                    }),
-                });
-                const data = await res.json();
+                const data = await fetchAIProxy(body);
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
-            } catch (e) { return "Error: " + e.message; }
+            } catch (e) {
+                return "Error: " + e.message;
+            }
         }
 
+        // ── CSV parser ────────────────────────────────────────────────────────────────
         function parseCSV(text) {
             const lines = text.trim().split("\n");
             if (lines.length < 2) return [];
@@ -216,22 +204,40 @@
             return { sessions, pageViews, rageClicks, deadClicks, avgScroll: scrollN ? (scrollSum / scrollN).toFixed(1) : null, rows: rows.length };
         }
 
+        const SYSTEM_PROMPT = `You are a senior product analyst AI specializing in mobile UX and college application platforms.
+You have access to Microsoft Clarity behavioral data for a college application mobile app where students apply directly to colleges.
+
+Analyze user behavior data and give sharp, actionable product improvement ideas. Focus on:
+- Drop-off points in the application funnel
+- Rage clicks / dead clicks signaling confusion
+- Device/browser/OS patterns causing friction
+- Navigation confusion and form friction
+
+Structure each insight as:
+1. Key insight (what the data shows)
+2. Why it matters for students applying to college
+3. Specific product improvement recommendation
+4. Priority: 🔴 Critical / 🟡 Medium / 🟢 Nice-to-have
+
+Be direct and actionable.`;
+
+        // ── UI Components ─────────────────────────────────────────────────────────────
         function Stat({ icon, label, value, sub, color }) {
             return (
-                <div className="glass-card" style={{ padding: '24px', flex: 1, borderTop: `4px solid ${color}` }}>
-                    <div style={{ fontSize: '24px', marginBottom: '12px' }}>{icon}</div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '4px' }}>{label}</div>
-                    <div style={{ fontSize: '28px', fontWeight: 800, color: '#fff', fontFamily: 'Outfit' }}>{value}</div>
-                    {sub && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>{sub}</div>}
+                <div style={{ background: "rgba(255,255,255,0.04)", borderTop: `2px solid ${color}`, borderRadius: 12, padding: "18px 20px" }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{icon}</div>
+                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "#555", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: "'Syne',sans-serif" }}>{value}</div>
+                    {sub && <div style={{ fontSize: 11, color: "#444", marginTop: 2 }}>{sub}</div>}
                 </div>
             );
         }
 
         function InsightCard({ text, i }) {
-            const cols = ["#6366f1", "#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
+            const cols = ["#ff6b6b", "#ffd166", "#06d6a0", "#118ab2", "#a29bfe"];
             return (
-                <div className="glass-card" style={{ padding: '20px', marginBottom: '16px', borderLeft: `4px solid ${cols[i % 5]}`, animation: `fadeIn 0.5s ease forwards ${i * 0.1}s`, opacity: 0 }}>
-                    <div style={{ fontSize: '15px', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{text}</div>
+                <div style={{ background: "rgba(255,255,255,0.025)", borderLeft: `3px solid ${cols[i % 5]}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+                    <p style={{ margin: 0, fontSize: 13.5, color: "#ccc", lineHeight: 1.8, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-wrap" }}>{text}</p>
                 </div>
             );
         }
@@ -239,24 +245,18 @@
         function Bubble({ msg }) {
             const u = msg.role === "user";
             return (
-                <div style={{ display: 'flex', justifyContent: u ? 'flex-end' : 'flex-start', marginBottom: '16px' }}>
-                    <div style={{
-                        maxWidth: '80%',
-                        padding: '12px 20px',
-                        borderRadius: u ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                        background: u ? 'linear-gradient(135deg, var(--primary), var(--accent))' : 'var(--bg-card)',
-                        border: u ? 'none' : '1px solid var(--border)',
-                        color: '#fff',
-                        fontSize: '14px',
-                        lineHeight: '1.5',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                    }}>
-                        {msg.content}
-                    </div>
+                <div style={{ display: "flex", justifyContent: u ? "flex-end" : "flex-start", marginBottom: 12 }}>
+                    {!u && <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg,#06d6a0,#118ab2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, marginRight: 8, flexShrink: 0, marginTop: 3 }}>✦</div>}
+                    <div style={{ maxWidth: "76%", background: u ? "linear-gradient(135deg,#1a6b5a,#0d4a3f)" : "rgba(255,255,255,0.05)", border: u ? "1px solid #06d6a025" : "1px solid rgba(255,255,255,0.07)", borderRadius: u ? "16px 4px 16px 16px" : "4px 16px 16px 16px", padding: "11px 15px", fontSize: 13.5, color: "#d0d0d0", lineHeight: 1.75, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-wrap" }}>{msg.content}</div>
                 </div>
             );
         }
 
+        function StatusBadge({ label, color }) {
+            return <span style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", color }}>{color === "#06d6a0" ? "●" : "○"} {label}</span>;
+        }
+
+        // ── Main App ──────────────────────────────────────────────────────────────────
         function App() {
             const [tab, setTab] = useState("setup");
             const [token, setToken] = useState("");
@@ -272,146 +272,295 @@
             const [chatInput, setChatInput] = useState("");
             const [chatLoading, setChatLoading] = useState(false);
             const [err, setErr] = useState("");
+            const [showRaw, setShowRaw] = useState(false);
             const fileRef = useRef(null);
             const endRef = useRef(null);
 
             useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
 
-            const connect = async () => {
-                if (!token.trim()) { setErr("Please enter API token."); return; }
-                setLoading(true); setErr("");
-                setLoadingMsg("Fetching data...");
-                const res = await fetchClarityViaClaudeTools(token.trim(), days);
-                setClarityData(res.data);
-                setRawResponse(res.raw);
-                if (res.error && !res.data) setErr(`Fetch error: ${res.error.slice(0, 100)}...`);
-                setLoadingMsg("Analyzing...");
-                const reply = await analyzeWithClaude("Senior Product Analyst", res.data, csv);
-                setInsights(reply.split(/\n(?=\d+\.)/).filter(Boolean));
-                setLoading(false); setTab("dashboard");
-            };
+            async function connect() {
+                if (!token.trim()) { setErr("Please enter your API token."); return; }
+                setLoading(true); setErr(""); setClarityData(null); setInsights([]);
+
+                // Step 1: fetch via Claude tools
+                setLoadingMsg("Fetching data from Clarity via Claude…");
+                const result = await fetchClarityViaClaudeTools(token.trim(), days);
+                setRawResponse(result.raw || "");
+
+                if (result.error && !result.data) {
+                    setErr(`⚠️ Couldn't fetch live data: ${result.error.slice(0, 180)}. Proceeding with CSV data (if uploaded) and AI expertise.`);
+                } else {
+                    setClarityData(result.data);
+                }
+
+                // Step 2: generate insights regardless
+                setLoadingMsg("Generating product insights…");
+                const reply = await analyzeWithClaude(SYSTEM_PROMPT, result.data, csv);
+                const parts = reply.split(/\n(?=\d+\.)/).filter(Boolean);
+                setInsights(parts.length > 1 ? parts : [reply]);
+
+                setLoading(false);
+                setLoadingMsg("");
+                setTab("dashboard");
+            }
+
+            function handleFile(e) {
+                const f = e.target.files?.[0]; if (!f) return;
+                setCsvName(f.name);
+                const reader = new FileReader();
+                reader.onload = (ev) => setCsv(parseCSV(ev.target.result));
+                reader.readAsText(f);
+            }
+
+            async function reAnalyze() {
+                setLoading(true); setLoadingMsg("Re-analyzing…");
+                const reply = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv);
+                const parts = reply.split(/\n(?=\d+\.)/).filter(Boolean);
+                setInsights(parts.length > 1 ? parts : [reply]);
+                setLoading(false); setLoadingMsg("");
+            }
+
+            async function send() {
+                if (!chatInput.trim() || chatLoading) return;
+                const msg = chatInput.trim(); setChatInput("");
+                const next = [...chat, { role: "user", content: msg }];
+                setChat(next); setChatLoading(true);
+                const reply = await chatWithClaude(SYSTEM_PROMPT, msg, chat, clarityData, csv);
+                setChat([...next, { role: "assistant", content: reply }]);
+                setChatLoading(false);
+            }
 
             const stats = extractStats(clarityData);
+            const isConnected = !!clarityData;
+
+            // Styles
+            const inp = { width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#e0e0e0", fontSize: 14, fontFamily: "'DM Mono',monospace", outline: "none", boxSizing: "border-box" };
+            const btn = (v = "p") => ({ padding: "10px 20px", borderRadius: 10, border: "none", background: v === "p" ? "linear-gradient(135deg,#06d6a0,#118ab2)" : "rgba(255,255,255,0.06)", color: v === "p" ? "#000" : "#888", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Syne',sans-serif" });
+            const navBtn = (a) => ({ padding: "6px 13px", borderRadius: 8, border: "none", background: a ? "rgba(6,214,160,0.1)" : "transparent", color: a ? "#06d6a0" : "#555", fontSize: 13, fontWeight: a ? 600 : 400, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" });
+            const card = { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, marginBottom: 14 };
+            const lbl = { fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: 6, display: "block", fontFamily: "'DM Mono',monospace" };
 
             return (
-                <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-                    <header style={{ borderBottom: '1px solid var(--border)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px', position: 'sticky', top: 0, zIndex: 100, background: 'rgba(11, 15, 25, 0.8)', backdropFilter: 'blur(10px)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>✦</div>
-                            <span style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '-0.02em' }}>Clarity Agent</span>
+                <div style={{ minHeight: "100vh", background: "#080a0d", fontFamily: "'DM Sans',sans-serif", color: "#e0e0e0" }}>
+
+                    {/* Header */}
+                    <header style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 26px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, background: "rgba(8,10,13,0.97)", backdropFilter: "blur(16px)", position: "sticky", top: 0, zIndex: 100 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#06d6a0,#118ab2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>✦</div>
+                            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Syne',sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>Clarity Agent</span>
+                            <span style={{ fontSize: 11, color: "#222", fontFamily: "'DM Mono',monospace" }}>/ college app</span>
                         </div>
-                        <nav style={{ display: 'flex', gap: '8px' }}>
+                        <nav style={{ display: "flex", gap: 2 }}>
                             {["setup", "dashboard", "chat"].map((t) => (
-                                <button key={t} className={`nav-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-                                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                                <button key={t} style={navBtn(tab === t)} onClick={() => setTab(t)}>
+                                    {t === "setup" ? "⚙ Setup" : t === "dashboard" ? "◈ Dashboard" : "◎ Chat"}
                                 </button>
                             ))}
                         </nav>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ padding: '6px 12px', borderRadius: '20px', background: clarityData ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)', color: clarityData ? 'var(--secondary)' : 'var(--text-muted)', fontSize: '12px' }}>
-                                {clarityData ? '● Live Connected' : '○ Offline'}
-                            </div>
+                        <div style={{ display: "flex", gap: 12 }}>
+                            <StatusBadge label={isConnected ? "API connected" : "Not connected"} color={isConnected ? "#06d6a0" : "#333"} />
+                            {csv && <StatusBadge label="CSV loaded" color="#ffd166" />}
                         </div>
                     </header>
 
-                    <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px', width: '100%', boxSizing: 'border-box' }}>
+                    <main style={{ maxWidth: 1040, margin: "0 auto", padding: "26px 20px" }}>
+
+                        {/* ── SETUP ── */}
                         {tab === "setup" && (
-                            <div style={{ maxWidth: '600px', animation: 'fadeIn 0.6s ease' }}>
-                                <h1 style={{ fontSize: '40px', fontWeight: 800, fontFamily: 'Outfit', marginBottom: '12px', letterSpacing: '-0.02em' }}>Welcome back.</h1>
-                                <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Initialize your AI agent with Clarity API access to start generating insights.</p>
+                            <div style={{ maxWidth: 520, animation: "fadeIn 0.6s ease" }}>
+                                <h1 style={{ fontSize: 28, fontWeight: 800, fontFamily: "'Syne',sans-serif", margin: "0 0 6px", letterSpacing: "-0.03em" }}>Connect Clarity</h1>
+                                <p style={{ color: "#444", fontSize: 14, margin: "0 0 26px" }}>Paste your Data Export API token. The agent fetches data through Claude's servers — no CORS issues.</p>
 
-                                <div className="glass-card" style={{ padding: '32px' }}>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clarity API Token</label>
-                                    <input type="password" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', marginBottom: '20px', boxSizing: 'border-box' }} value={token} onChange={(e) => setToken(e.target.value)} placeholder="••••••••••••••••" />
+                                <div style={card}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
+                                        <span style={{ fontSize: 18 }}>🔌</span>
+                                        <span style={{ fontWeight: 700, fontFamily: "'Syne',sans-serif" }}>Microsoft Clarity API</span>
+                                    </div>
 
-                                    <div style={{ marginBottom: '32px' }}>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Historical Range</label>
-                                        <div style={{ display: 'flex', gap: '12px' }}>
-                                            {[24, 48, 72].map(h => (
-                                                <button key={h} onClick={() => setDays(h / 24)} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: days === h / 24 ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'Inter', fontSize: '13px' }}>{h}h</button>
+                                    <div style={{ marginBottom: 14 }}>
+                                        <label style={lbl}>Data Export API Token</label>
+                                        <input style={inp} type="password" placeholder="Paste your token here" value={token} onChange={(e) => setToken(e.target.value)} onKeyDown={(e) => e.key === "Enter" && connect()} />
+                                        <p style={{ margin: "5px 0 0", fontSize: 12, color: "#3a3a3a" }}>Clarity → Settings → Data Export → Generate new API token</p>
+                                    </div>
+
+                                    <div style={{ marginBottom: 18 }}>
+                                        <label style={lbl}>Time range (Clarity supports max 72h)</label>
+                                        <div style={{ display: "flex", gap: 8 }}>
+                                            {[1, 2, 3].map((d) => (
+                                                <button key={d} onClick={() => setDays(d)} style={{ ...btn(days === d ? "p" : "s"), padding: "8px 18px", fontSize: 13 }}>
+                                                    {d === 1 ? "24h" : d === 2 ? "48h" : "72h"}
+                                                </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {err && <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '12px', borderRadius: '10px', marginBottom: '20px', fontSize: '13px' }}>{err}</div>}
+                                    {err && (
+                                        <div style={{ background: "rgba(255,200,50,0.07)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+                                            <p style={{ margin: 0, color: "#ffd166", fontSize: 13, lineHeight: 1.6 }}>{err}</p>
+                                        </div>
+                                    )}
 
-                                    <button className="btn-primary" style={{ width: '100%', padding: '14px' }} onClick={connect} disabled={loading}>
-                                        {loading ? loadingMsg : "Start Analysis →"}
+                                    <button style={btn()} onClick={connect} disabled={loading}>
+                                        {loading ? (
+                                            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                <span style={{ display: "inline-block", width: 12, height: 12, border: "2px solid #000", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                                                {loadingMsg || "Connecting…"}
+                                            </span>
+                                        ) : "Connect & Analyze →"}
                                     </button>
                                 </div>
+
+                                {/* CSV */}
+                                <div style={card}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                                        <span style={{ fontSize: 18 }}>📂</span>
+                                        <span style={{ fontWeight: 700, fontFamily: "'Syne',sans-serif" }}>Upload CSV Export</span>
+                                        <span style={{ fontSize: 11, color: "#333", marginLeft: 4 }}>optional</span>
+                                    </div>
+                                    <p style={{ fontSize: 13, color: "#444", margin: "0 0 14px", lineHeight: 1.6 }}>
+                                        For 7, 30, or 90-day history — export CSV from the Clarity dashboard and upload it here. This also works as a standalone data source if the API is unavailable.
+                                    </p>
+                                    <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+                                    <button style={btn("s")} onClick={() => fileRef.current?.click()}>
+                                        {csvName ? `✓ ${csvName}` : "Choose CSV file"}
+                                    </button>
+                                    {csv && <p style={{ fontSize: 12, color: "#06d6a0", marginTop: 8 }}>✓ {csv.length} rows loaded</p>}
+                                </div>
+
+                                <div style={{ padding: "12px 16px", background: "rgba(17,138,178,0.06)", borderRadius: 10, border: "1px solid rgba(17,138,178,0.15)" }}>
+                                    <p style={{ margin: 0, fontSize: 12, color: "#555", lineHeight: 1.7 }}>
+                                        <span style={{ color: "#118ab2" }}>ℹ️</span> Data is fetched through Claude's servers to avoid browser CORS restrictions. Clarity's API is capped at <strong style={{ color: "#888" }}>10 calls/day</strong> per project — use CSV upload for unlimited historical analysis.
+                                    </p>
+                                </div>
                             </div>
                         )}
 
+                        {/* ── DASHBOARD ── */}
                         {tab === "dashboard" && (
-                            <div style={{ animation: 'fadeIn 0.6s ease' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                            <div style={{ animation: "fadeIn 0.6s ease" }}>
+                                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
                                     <div>
-                                        <h2 style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'Outfit', margin: 0 }}>Behavioral Insights</h2>
-                                        <p style={{ color: 'var(--text-muted)', margin: '4px 0 0' }}>Analyzing {days * 24} hours of user sessions</p>
+                                        <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne',sans-serif", margin: "0 0 4px", letterSpacing: "-0.03em" }}>Product Intelligence</h1>
+                                        <p style={{ color: "#444", fontSize: 13, margin: 0 }}>Last {days * 24}h · College application mobile app</p>
                                     </div>
-                                    <button className="btn-primary" onClick={connect} style={{ padding: '10px 24px' }}>Refresh</button>
+                                    <button style={btn("s")} onClick={reAnalyze} disabled={loading}>{loading ? loadingMsg || "Analyzing…" : "↻ Re-analyze"}</button>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-                                    <Stat icon="🚀" label="Sessions" value={stats?.sessions?.toLocaleString() || "—"} color="var(--primary)" />
-                                    <Stat icon="👁️" label="Views" value={stats?.pageViews?.toLocaleString() || "—"} color="var(--accent)" />
-                                    <Stat icon="😡" label="Rage Clicks" value={stats?.rageClicks?.toLocaleString() || "—"} color="#ef4444" />
-                                    <Stat icon="🧊" label="Dead Clicks" value={stats?.deadClicks?.toLocaleString() || "—"} color="#f59e0b" />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
-                                    <div>
-                                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', fontFamily: 'Outfit' }}>Product Recommendations</h3>
-                                        {insights.length > 0 ? insights.map((ins, i) => <InsightCard key={i} text={ins} i={i} />) : <p style={{ color: 'var(--text-muted)' }}>Connect your API to see AI recommendations.</p>}
+                                {!isConnected && !csv && (
+                                    <div style={{ background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", borderRadius: 12, padding: 16, marginBottom: 22 }}>
+                                        <p style={{ margin: 0, color: "#ff6b6b", fontSize: 13 }}>No data loaded. Go to <strong>Setup</strong> to connect Clarity or upload a CSV.</p>
                                     </div>
-                                    <div className="glass-card" style={{ padding: '24px', height: 'fit-content' }}>
-                                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', fontFamily: 'Outfit' }}>Context Metadata</h3>
-                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '2' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Data Rows</span><span style={{ color: '#fff' }}>{stats?.rows || 0}</span></div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Avg Scroll</span><span style={{ color: '#fff' }}>{stats?.avgScroll || '—'}%</span></div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>API Status</span><span style={{ color: 'var(--secondary)' }}>Operational</span></div>
+                                )}
+
+                                {/* Stats */}
+                                {stats && (
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10, marginBottom: 26 }}>
+                                        <Stat icon="👥" label="Sessions" value={stats.sessions.toLocaleString()} color="#06d6a0" />
+                                        <Stat icon="📄" label="Page Views" value={stats.pageViews.toLocaleString()} color="#118ab2" />
+                                        <Stat icon="😤" label="Rage Clicks" value={stats.rageClicks.toLocaleString()} sub="frustration signals" color="#ff6b6b" />
+                                        <Stat icon="🖱️" label="Dead Clicks" value={stats.deadClicks.toLocaleString()} sub="unresponsive taps" color="#ff9f43" />
+                                        {stats.avgScroll && <Stat icon="📜" label="Avg Scroll" value={`${stats.avgScroll}%`} color="#a29bfe" />}
+                                        <Stat icon="📊" label="Data Rows" value={stats.rows} sub="dimension breakdown" color="#ffd166" />
+                                    </div>
+                                )}
+
+                                {/* API data table */}
+                                {clarityData && Array.isArray(clarityData) && clarityData.length > 0 && (
+                                    <div style={{ marginBottom: 24 }}>
+                                        <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#333", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Live Clarity Data</div>
+                                        <div style={{ overflowX: "auto", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
+                                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
+                                                <thead><tr>{Object.keys(clarityData[0]).slice(0, 8).map((k) => <th key={k} style={{ padding: "8px 12px", textAlign: "left", color: "#3a3a3a", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>{k}</th>)}</tr></thead>
+                                                <tbody>{clarityData.slice(0, 8).map((row, i) => (
+                                                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.025)" }}>
+                                                        {Object.values(row).slice(0, 8).map((v, j) => <td key={j} style={{ padding: "7px 12px", color: "#666" }}>{String(v)}</td>)}
+                                                    </tr>
+                                                ))}</tbody>
+                                            </table>
                                         </div>
                                     </div>
+                                )}
+
+                                {/* Raw response toggle */}
+                                {rawResponse && (
+                                    <div style={{ marginBottom: 24 }}>
+                                        <button onClick={() => setShowRaw(!showRaw)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 7, color: "#444", fontSize: 11, padding: "5px 10px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>
+                                            {showRaw ? "▲ Hide raw response" : "▼ Show raw API response"}
+                                        </button>
+                                        {showRaw && <pre style={{ marginTop: 8, background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 14, fontSize: 11, color: "#555", overflowX: "auto", maxHeight: 260, overflowY: "auto", fontFamily: "'DM Mono',monospace" }}>{rawResponse}</pre>}
+                                    </div>
+                                )}
+
+                                {/* CSV preview */}
+                                {csv && (
+                                    <div style={{ marginBottom: 24 }}>
+                                        <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#333", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>CSV · {csv.length} rows</div>
+                                        <div style={{ overflowX: "auto", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
+                                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
+                                                <thead><tr>{Object.keys(csv[0] || {}).slice(0, 7).map((h) => <th key={h} style={{ padding: "8px 12px", textAlign: "left", color: "#3a3a3a", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>{h}</th>)}</tr></thead>
+                                                <tbody>{csv.slice(0, 6).map((row, i) => (
+                                                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.025)" }}>
+                                                        {Object.values(row).slice(0, 7).map((v, j) => <td key={j} style={{ padding: "7px 12px", color: "#666" }}>{v}</td>)}
+                                                    </tr>
+                                                ))}</tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Insights */}
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#06d6a0,#118ab2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✦</div>
+                                        <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#333", fontFamily: "'DM Mono',monospace" }}>AI Product Improvement Ideas</div>
+                                    </div>
+                                    {loading && <p style={{ color: "#333", fontSize: 13, fontFamily: "'DM Mono',monospace" }}>{loadingMsg || "Analyzing…"}</p>}
+                                    {!loading && insights.length === 0 && <p style={{ color: "#2a2a2a", fontSize: 13 }}>Connect Clarity or upload a CSV to generate insights.</p>}
+                                    {insights.map((ins, i) => <InsightCard key={i} text={ins} i={i} />)}
                                 </div>
                             </div>
                         )}
 
+                        {/* ── CHAT ── */}
                         {tab === "chat" && (
-                            <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.6s ease' }}>
-                                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '12px', marginBottom: '24px' }}>
+                            <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", animation: "fadeIn 0.6s ease" }}>
+                                <div style={{ marginBottom: 16 }}>
+                                    <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne',sans-serif", margin: "0 0 4px", letterSpacing: "-0.03em" }}>Ask your agent</h1>
+                                    <p style={{ color: "#444", fontSize: 13, margin: 0 }}>Your Clarity data is loaded as context. Ask anything about user behavior.</p>
+                                </div>
+
+                                {chat.length === 0 && (
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+                                        {["Where are students dropping off?", "What's causing rage clicks?", "Which screens need the most UX work?", "How to improve the college search flow?", "What do device patterns tell us?"].map((q) => (
+                                            <button key={q} onClick={() => setChatInput(q)} style={{ padding: "7px 13px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", color: "#555", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{q}</button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div style={{ flex: 1, overflowY: "auto", paddingRight: 4, marginBottom: 12 }}>
                                     {chat.length === 0 && (
-                                        <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-muted)' }}>
-                                            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🤖</div>
-                                            <h3 style={{ color: '#fff', fontSize: '20px', fontFamily: 'Outfit' }}>Ask me anything</h3>
-                                            <p>How can I help you understand your users today?</p>
+                                        <div style={{ textAlign: "center", paddingTop: 50, color: "#1e1e1e" }}>
+                                            <div style={{ fontSize: 34, marginBottom: 10 }}>◎</div>
+                                            <p style={{ fontSize: 13, fontFamily: "'DM Mono',monospace" }}>Ask anything about your users</p>
                                         </div>
                                     )}
                                     {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                    {chatLoading && <div className="glass-card" style={{ padding: '12px 20px', width: 'fit-content', fontSize: '14px' }}>Thinking...</div>}
+                                    {chatLoading && (
+                                        <div style={{ display: "flex", gap: 8, padding: "6px 0" }}>
+                                            <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg,#06d6a0,#118ab2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>✦</div>
+                                            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "4px 16px 16px 16px", padding: "11px 15px", color: "#333", fontSize: 13 }}>Thinking…</div>
+                                        </div>
+                                    )}
                                     <div ref={endRef} />
                                 </div>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <input style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none' }} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !chatLoading && (async () => {
-                                        if (!chatInput.trim()) return;
-                                        const msg = chatInput; setChatInput("");
-                                        const next = [...chat, { role: "user", content: msg }];
-                                        setChat(next); setChatLoading(true);
-                                        const reply = await chatWithClaude("Analyst", msg, chat, clarityData, csv);
-                                        setChat([...next, { role: "assistant", content: reply }]);
-                                        setChatLoading(false);
-                                    })()} placeholder="Ask a question about user drops, device performance..." />
-                                    <button className="btn-primary" onClick={async () => {
-                                        if (!chatInput.trim()) return;
-                                        const msg = chatInput; setChatInput("");
-                                        const next = [...chat, { role: "user", content: msg }];
-                                        setChat(next); setChatLoading(true);
-                                        const reply = await chatWithClaude("Analyst", msg, chat, clarityData, csv);
-                                        setChat([...next, { role: "assistant", content: reply }]);
-                                        setChatLoading(false);
-                                    }}>Send</button>
+
+                                <div style={{ display: "flex", gap: 10 }}>
+                                    <input style={{ ...inp, flex: 1, fontFamily: "'DM Sans',sans-serif" }} placeholder="Ask about drop-offs, rage clicks, UX improvements…" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()} />
+                                    <button style={{ ...btn(), padding: "11px 18px", flexShrink: 0 }} onClick={send} disabled={chatLoading}>Send →</button>
                                 </div>
                             </div>
                         )}
+
                     </main>
                 </div>
             );

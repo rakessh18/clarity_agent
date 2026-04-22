@@ -111,18 +111,24 @@
 
         // Step 2: Ask Claude to analyze the data and return insights
         async function analyzeWithClaude(systemPrompt, clarityData, csvData) {
-            const payload = JSON.stringify({
-                clarityData,
-                csvSample: csvData?.slice(0, 25) ?? null,
-            }, null, 2).slice(0, 15000);
+            const stats = extractStats(clarityData);
+            const payload = {
+                summary: stats,
+                clarityMetrics: Array.isArray(clarityData) ? clarityData.map(m => ({
+                    name: m.metricName,
+                    total: typeof m.information === 'object' ? 
+                        (Array.isArray(m.information) ? m.information.reduce((a, b) => a + (parseInt(b.Total || b.TotalSessions || 0)), 0) : "Complex") : m.information
+                })) : "No live data",
+                csvSample: csvData?.slice(0, 10)
+            };
 
             const body = {
                 model: CLAUDE_MODEL,
-                max_tokens: 1500,
+                max_tokens: 1000,
                 system: systemPrompt,
                 messages: [{
                     role: "user",
-                    content: `Here is Microsoft Clarity behavioral data for my college application mobile app:\n\n${payload}\n\nGive me the top 5 most important product improvement ideas. Be specific and actionable.`,
+                    content: `Analyze this behavioral data and give me 5 improvements: ${JSON.stringify(payload)}`,
                 }],
             };
 
@@ -488,22 +494,28 @@ Be direct and actionable.`;
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {clarityData.slice(0, 20).map((row, i) => (
-                                                        <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-                                                            <td style={{ padding: "10px 12px", color: "#06d6a0", fontWeight: 600 }}>{row.metricName || i}</td>
-                                                            <td style={{ padding: "10px 12px", color: "#aaa" }}>
-                                                                {typeof row.information === 'object' ? (
-                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                                        {Object.entries(row.information).slice(0, 5).map(([k, v]) => (
-                                                                            <span key={k} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 10 }}>
-                                                                                {k}: {typeof v === 'object' ? '...' : v}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                ) : String(row.information || JSON.stringify(row))}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
+                                                    {clarityData.slice(0, 20).map((row, i) => {
+                                                        const sum = Array.isArray(row.information) ? 
+                                                            row.information.reduce((a, b) => a + (parseInt(b.Total || b.TotalSessions || b.Count || 0)), 0) : 0;
+                                                        
+                                                        return (
+                                                            <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                                                                <td style={{ padding: "10px 12px", color: "#06d6a0", fontWeight: 600 }}>{row.metricName || i}</td>
+                                                                <td style={{ padding: "10px 12px", color: "#aaa" }}>
+                                                                    <span style={{ color: "#fff", fontWeight: 700, marginRight: 10 }}>{sum > 0 ? sum.toLocaleString() : ""}</span>
+                                                                    {typeof row.information === 'object' && (
+                                                                        <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
+                                                                            {Object.entries(Array.isArray(row.information) ? row.information[0] : row.information).slice(0, 3).map(([k, v]) => (
+                                                                                <span key={k} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 10 }}>
+                                                                                    {k}: {String(v)}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>

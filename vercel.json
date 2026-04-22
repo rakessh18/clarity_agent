@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "name": "clarity-ai-agent",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ]
+}

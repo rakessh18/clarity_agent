@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarity AI Agent | Sleek Midnight</title>
+    <!-- React and ReactDOM CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel CDN for JSX support in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0b0f19;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --accent: #3b82f6;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .nav-btn.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
+
+        async function fetchClarityViaClaudeTools(apiToken, numOfDays) {
+            const clarityUrl = `https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=${numOfDays}&dimension1=Browser&dimension2=Device&dimension3=OS`;
+            const body = {
+                model: CLAUDE_MODEL,
+                max_tokens: 4000,
+                tools: [{ type: "web_search", name: "web_search" }],
+                messages: [{
+                    role: "user",
+                    content: `Please fetch this URL and return the complete raw JSON response body. URL: ${clarityUrl}. Auth: Bearer ${apiToken}. Use the web_search tool.`
+                }]
+            };
+            try {
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                const fullText = (data.content || []).map((b) => (b.type === "text" ? b.text : "")).filter(Boolean).join("\n");
+                const jsonMatch = fullText.match(/```json\n?([\s\S]*?)```/) || fullText.match(/(\[[\s\S]*\])/) || fullText.match(/(\{[\s\S]*\})/);
+                if (jsonMatch) return { data: JSON.parse(jsonMatch[1]), raw: jsonMatch[1], error: null };
+                return { data: null, raw: fullText, error: fullText || "Could not retrieve Clarity data." };
+            } catch (e) { return { data: null, raw: "", error: e.message }; }
+        }
+
+        async function analyzeWithClaude(systemPrompt, clarityData, csvData) {
+            const payload = JSON.stringify({ clarityData, csvSample: csvData?.slice(0, 25) ?? null }, null, 2);
+            try {
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: CLAUDE_MODEL,
+                        max_tokens: 1500,
+                        system: systemPrompt,
+                        messages: [{
+                            role: "user",
+                            content: `Here is Microsoft Clarity behavioral data for my college application mobile app:\n\n${payload}\n\nGive me the top 5 most important product improvement ideas. Be specific and actionable.`,
+                        }],
+                    }),
+                });
+                const data = await res.json();
+                return data.content?.map((b) => b.text || "").join("") || "No response.";
+            } catch (e) { return "Error: " + e.message; }
+        }
+
+        async function chatWithClaude(systemPrompt, userMessage, history, clarityData, csvData) {
+            const ctx = `\n\nClarity data:\n${JSON.stringify({ clarityData, csvSample: csvData?.slice(0, 15) }, null, 2)}`;
+            try {
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: CLAUDE_MODEL,
+                        max_tokens: 1000,
+                        system: systemPrompt + ctx,
+                        messages: [...history, { role: "user", content: userMessage }],
+                    }),
+                });
+                const data = await res.json();
+                return data.content?.map((b) => b.text || "").join("") || "No response.";
+            } catch (e) { return "Error: " + e.message; }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split("\n");
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
+            return lines.slice(1).map((line) => {
+                const vals = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+                return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]));
+            });
+        }
+
+        function extractStats(data) {
+            if (!data) return null;
+            const rows = Array.isArray(data) ? data : data?.metrics || data?.data || [];
+            if (!rows.length) return null;
+            let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0, scrollSum = 0, scrollN = 0;
+            rows.forEach((r) => {
+                sessions += parseInt(r.sessions || r.totalSessions || 0);
+                pageViews += parseInt(r.pageViews || r.totalPageViews || 0);
+                rageClicks += parseInt(r.rageClicks || r.rageClickCount || 0);
+                deadClicks += parseInt(r.deadClicks || r.deadClickCount || 0);
+                const sd = parseFloat(r.scrollDepth || r.avgScrollDepth || 0);
+                if (sd > 0) { scrollSum += sd; scrollN++; }
+            });
+            return { sessions, pageViews, rageClicks, deadClicks, avgScroll: scrollN ? (scrollSum / scrollN).toFixed(1) : null, rows: rows.length };
+        }
+
+        function Stat({ icon, label, value, sub, color }) {
+            return (
+                <div className="glass-card" style={{ padding: '24px', flex: 1, borderTop: `4px solid ${color}` }}>
+                    <div style={{ fontSize: '24px', marginBottom: '12px' }}>{icon}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '4px' }}>{label}</div>
+                    <div style={{ fontSize: '28px', fontWeight: 800, color: '#fff', fontFamily: 'Outfit' }}>{value}</div>
+                    {sub && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>{sub}</div>}
+                </div>
+            );
+        }
+
+        function InsightCard({ text, i }) {
+            const cols = ["#6366f1", "#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
+            return (
+                <div className="glass-card" style={{ padding: '20px', marginBottom: '16px', borderLeft: `4px solid ${cols[i % 5]}`, animation: `fadeIn 0.5s ease forwards ${i * 0.1}s`, opacity: 0 }}>
+                    <div style={{ fontSize: '15px', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{text}</div>
+                </div>
+            );
+        }
+
+        function Bubble({ msg }) {
+            const u = msg.role === "user";
+            return (
+                <div style={{ display: 'flex', justifyContent: u ? 'flex-end' : 'flex-start', marginBottom: '16px' }}>
+                    <div style={{
+                        maxWidth: '80%',
+                        padding: '12px 20px',
+                        borderRadius: u ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                        background: u ? 'linear-gradient(135deg, var(--primary), var(--accent))' : 'var(--bg-card)',
+                        border: u ? 'none' : '1px solid var(--border)',
+                        color: '#fff',
+                        fontSize: '14px',
+                        lineHeight: '1.5',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                    }}>
+                        {msg.content}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [tab, setTab] = useState("setup");
+            const [token, setToken] = useState("");
+            const [days, setDays] = useState(1);
+            const [clarityData, setClarityData] = useState(null);
+            const [rawResponse, setRawResponse] = useState("");
+            const [csv, setCsv] = useState(null);
+            const [csvName, setCsvName] = useState("");
+            const [loading, setLoading] = useState(false);
+            const [loadingMsg, setLoadingMsg] = useState("");
+            const [insights, setInsights] = useState([]);
+            const [chat, setChat] = useState([]);
+            const [chatInput, setChatInput] = useState("");
+            const [chatLoading, setChatLoading] = useState(false);
+            const [err, setErr] = useState("");
+            const fileRef = useRef(null);
+            const endRef = useRef(null);
+
+            useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
+
+            const connect = async () => {
+                if (!token.trim()) { setErr("Please enter API token."); return; }
+                setLoading(true); setErr("");
+                setLoadingMsg("Fetching data...");
+                const res = await fetchClarityViaClaudeTools(token.trim(), days);
+                setClarityData(res.data);
+                setRawResponse(res.raw);
+                if (res.error && !res.data) setErr(`Fetch error: ${res.error.slice(0, 100)}...`);
+                setLoadingMsg("Analyzing...");
+                const reply = await analyzeWithClaude("Senior Product Analyst", res.data, csv);
+                setInsights(reply.split(/\n(?=\d+\.)/).filter(Boolean));
+                setLoading(false); setTab("dashboard");
+            };
+
+            const stats = extractStats(clarityData);
+
+            return (
+                <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+                    <header style={{ borderBottom: '1px solid var(--border)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px', position: 'sticky', top: 0, zIndex: 100, background: 'rgba(11, 15, 25, 0.8)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>✦</div>
+                            <span style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'Outfit', letterSpacing: '-0.02em' }}>Clarity Agent</span>
+                        </div>
+                        <nav style={{ display: 'flex', gap: '8px' }}>
+                            {["setup", "dashboard", "chat"].map((t) => (
+                                <button key={t} className={`nav-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+                                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                                </button>
+                            ))}
+                        </nav>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ padding: '6px 12px', borderRadius: '20px', background: clarityData ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)', color: clarityData ? 'var(--secondary)' : 'var(--text-muted)', fontSize: '12px' }}>
+                                {clarityData ? '● Live Connected' : '○ Offline'}
+                            </div>
+                        </div>
+                    </header>
+
+                    <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px', width: '100%', boxSizing: 'border-box' }}>
+                        {tab === "setup" && (
+                            <div style={{ maxWidth: '600px', animation: 'fadeIn 0.6s ease' }}>
+                                <h1 style={{ fontSize: '40px', fontWeight: 800, fontFamily: 'Outfit', marginBottom: '12px', letterSpacing: '-0.02em' }}>Welcome back.</h1>
+                                <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Initialize your AI agent with Clarity API access to start generating insights.</p>
+
+                                <div className="glass-card" style={{ padding: '32px' }}>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clarity API Token</label>
+                                    <input type="password" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', marginBottom: '20px', boxSizing: 'border-box' }} value={token} onChange={(e) => setToken(e.target.value)} placeholder="••••••••••••••••" />
+
+                                    <div style={{ marginBottom: '32px' }}>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Historical Range</label>
+                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                            {[24, 48, 72].map(h => (
+                                                <button key={h} onClick={() => setDays(h / 24)} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: days === h / 24 ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'Inter', fontSize: '13px' }}>{h}h</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {err && <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '12px', borderRadius: '10px', marginBottom: '20px', fontSize: '13px' }}>{err}</div>}
+
+                                    <button className="btn-primary" style={{ width: '100%', padding: '14px' }} onClick={connect} disabled={loading}>
+                                        {loading ? loadingMsg : "Start Analysis →"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === "dashboard" && (
+                            <div style={{ animation: 'fadeIn 0.6s ease' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                                    <div>
+                                        <h2 style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'Outfit', margin: 0 }}>Behavioral Insights</h2>
+                                        <p style={{ color: 'var(--text-muted)', margin: '4px 0 0' }}>Analyzing {days * 24} hours of user sessions</p>
+                                    </div>
+                                    <button className="btn-primary" onClick={connect} style={{ padding: '10px 24px' }}>Refresh</button>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                                    <Stat icon="🚀" label="Sessions" value={stats?.sessions?.toLocaleString() || "—"} color="var(--primary)" />
+                                    <Stat icon="👁️" label="Views" value={stats?.pageViews?.toLocaleString() || "—"} color="var(--accent)" />
+                                    <Stat icon="😡" label="Rage Clicks" value={stats?.rageClicks?.toLocaleString() || "—"} color="#ef4444" />
+                                    <Stat icon="🧊" label="Dead Clicks" value={stats?.deadClicks?.toLocaleString() || "—"} color="#f59e0b" />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
+                                    <div>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', fontFamily: 'Outfit' }}>Product Recommendations</h3>
+                                        {insights.length > 0 ? insights.map((ins, i) => <InsightCard key={i} text={ins} i={i} />) : <p style={{ color: 'var(--text-muted)' }}>Connect your API to see AI recommendations.</p>}
+                                    </div>
+                                    <div className="glass-card" style={{ padding: '24px', height: 'fit-content' }}>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', fontFamily: 'Outfit' }}>Context Metadata</h3>
+                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '2' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Data Rows</span><span style={{ color: '#fff' }}>{stats?.rows || 0}</span></div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Avg Scroll</span><span style={{ color: '#fff' }}>{stats?.avgScroll || '—'}%</span></div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>API Status</span><span style={{ color: 'var(--secondary)' }}>Operational</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === "chat" && (
+                            <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.6s ease' }}>
+                                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '12px', marginBottom: '24px' }}>
+                                    {chat.length === 0 && (
+                                        <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-muted)' }}>
+                                            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🤖</div>
+                                            <h3 style={{ color: '#fff', fontSize: '20px', fontFamily: 'Outfit' }}>Ask me anything</h3>
+                                            <p>How can I help you understand your users today?</p>
+                                        </div>
+                                    )}
+                                    {chat.map((m, i) => <Bubble key={i} msg={m} />)}
+                                    {chatLoading && <div className="glass-card" style={{ padding: '12px 20px', width: 'fit-content', fontSize: '14px' }}>Thinking...</div>}
+                                    <div ref={endRef} />
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <input style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none' }} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !chatLoading && (async () => {
+                                        if (!chatInput.trim()) return;
+                                        const msg = chatInput; setChatInput("");
+                                        const next = [...chat, { role: "user", content: msg }];
+                                        setChat(next); setChatLoading(true);
+                                        const reply = await chatWithClaude("Analyst", msg, chat, clarityData, csv);
+                                        setChat([...next, { role: "assistant", content: reply }]);
+                                        setChatLoading(false);
+                                    })()} placeholder="Ask a question about user drops, device performance..." />
+                                    <button className="btn-primary" onClick={async () => {
+                                        if (!chatInput.trim()) return;
+                                        const msg = chatInput; setChatInput("");
+                                        const next = [...chat, { role: "user", content: msg }];
+                                        setChat(next); setChatLoading(true);
+                                        const reply = await chatWithClaude("Analyst", msg, chat, clarityData, csv);
+                                        setChat([...next, { role: "assistant", content: reply }]);
+                                        setChatLoading(false);
+                                    }}>Send</button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

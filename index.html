@@ -85,7 +85,7 @@
                 const res = await fetch("/api/analyze", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "fetch", url, headers: { "Authorization": `Bearer ${apiToken}` } }),
+                    body: JSON.stringify({ action: "fetch", url, method: "GET", headers: { "Authorization": `Bearer ${apiToken}` } }),
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Failed Clarity sync");

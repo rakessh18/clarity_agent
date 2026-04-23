@@ -154,15 +154,19 @@
             let sessions = 0, pageViews = 0, rageClicks = 0, deadClicks = 0;
             
             rows.forEach((r) => {
-                sessions += parseInt(r.sessions || r.totalSessions || r.sessionsCount || 0);
-                pageViews += parseInt(r.pageViews || r.totalPageViews || 0);
-                
-                // Detailed check for friction metrics
-                const rc = parseInt(r.rageClicks || r.rageClickCount || (r.metricName === "RageTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
-                const dc = parseInt(r.deadClicks || r.deadClickCount || (r.metricName === "DeadTapCount" ? r.information?.reduce((a,b)=>a+(parseInt(b.Total||0)),0) : 0) || 0);
-                
-                rageClicks += rc;
-                deadClicks += dc;
+                const getVal = (keys) => {
+                    for (const k of keys) {
+                        if (r[k] !== undefined) return parseInt(r[k]) || 0;
+                        const found = Object.keys(r).find(key => key.toLowerCase().replace(/\s/g, '') === k.toLowerCase());
+                        if (found) return parseInt(r[found]) || 0;
+                    }
+                    return 0;
+                };
+
+                sessions += getVal(["sessions", "totalSessions", "sessionsCount", "TotalSessions"]);
+                pageViews += getVal(["pageViews", "totalPageViews", "PageViews", "TotalPageViews"]);
+                rageClicks += getVal(["rageClicks", "rageClickCount", "RageClicks", "RageTapCount"]);
+                deadClicks += getVal(["deadClicks", "deadClickCount", "DeadClicks", "DeadTapCount"]);
             });
 
             // Fallback for overview structure

@@ -52,12 +52,8 @@
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .data-table th { padding: 14px 16px; text-align: left; color: var(--text-muted); background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border); font-weight: 600; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
         .data-table td { padding: 12px 16px; color: var(--text-dim); border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
-        .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: var(--text-main); }
 
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; }
     </style>
 </head>
 
@@ -67,8 +63,6 @@
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
-        const CLAUDE_MODEL = "claude-3-5-sonnet-20241022";
-
         // ── API Logic ────────────────────────────────────────────────────────────────
         async function fetchAIProxy(body) {
             const res = await fetch("/api/analyze", {
@@ -77,7 +71,7 @@
                 body: JSON.stringify(body),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error?.message || data.error || "Proxy error");
+            if (!res.ok) throw new Error(data.error || "Proxy error");
             return data;
         }
 
@@ -107,9 +101,7 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
-                        action: "fetch", 
-                        url, 
-                        method: "POST",
+                        action: "fetch", url, method: "POST",
                         headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
                         data: reportData
                     }),
@@ -120,18 +112,12 @@
             } catch (e) { return { data: null, error: e.message }; }
         }
 
-        async function analyzeWithClaude(systemPrompt, clarityData, csvData, ga4Data, history = []) {
+        async function analyzeWithClaude(model, systemPrompt, clarityData, csvData, ga4Data, history = []) {
             const payload = {
                 clarity: clarityData,
                 csvSample: csvData?.slice(0, 15),
                 ga4: ga4Data,
-                summary: {
-                    clarityStats: extractStats(clarityData || csvData),
-                    ga4Stats: ga4Data?.rows ? {
-                        users: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[0].value), 0),
-                        conversions: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[2].value), 0)
-                    } : null
-                }
+                summary: { clarityStats: extractStats(clarityData || csvData) }
             };
 
             const messages = history.length > 0 ? history : [{
@@ -140,7 +126,7 @@
             }];
 
             try {
-                const data = await fetchAIProxy({ model: CLAUDE_MODEL, max_tokens: 1500, system: systemPrompt, messages });
+                const data = await fetchAIProxy({ model, max_tokens: 1500, system: systemPrompt, messages });
                 return data.content?.map((b) => b.text || "").join("") || "No response.";
             } catch (e) { return "Error: " + e.message; }
         }
@@ -170,11 +156,7 @@
             return { sessions, pageViews, rageClicks, deadClicks };
         }
 
-        const SYSTEM_PROMPT = `You are a high-level product consultant. Analyze unified data from Clarity (behavioral) and GA4 (traffic/conversion). 
-Identify correlations (e.g., traffic drop-off in GA4 matching rage clicks in Clarity).
-Structure:
-1. Executive Summary
-2. Top 5 Actionable Recommendations (Finding -> Why -> Fix -> Priority)`;
+        const SYSTEM_PROMPT = `You are a high-level product consultant. Analyze unified data. Identify correlations. Provide 5 actionable recommendations.`;
 
         // ── Components ────────────────────────────────────────────────────────────────
         function Stat({ icon, label, value, sub, color }) {
@@ -182,9 +164,9 @@ Structure:
                 <div className="glass-card" style={{ padding: "24px", flex: 1, borderTop: `2px solid ${color}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
                         <span style={{ fontSize: "18px" }}>{icon}</span>
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-display)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-display)", fontWeight: "600", textTransform: "uppercase" }}>{label}</span>
                     </div>
-                    <div style={{ fontSize: "28px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white", marginBottom: "4px" }}>{value}</div>
+                    <div style={{ fontSize: "28px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white" }}>{value}</div>
                     {sub && <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{sub}</div>}
                 </div>
             );
@@ -194,8 +176,7 @@ Structure:
             const u = msg.role === "user";
             return (
                 <div style={{ display: "flex", justifyContent: u ? "flex-end" : "flex-start", marginBottom: 18 }}>
-                    {!u && <div style={{ width: 30, height: 30, borderRadius: "8px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", marginRight: "12px", flexShrink: 0, marginTop: "2px" }}>✦</div>}
-                    <div style={{ maxWidth: "85%", background: u ? "var(--accent)" : "rgba(255, 255, 255, 0.04)", color: u ? "white" : "var(--text-main)", borderRadius: u ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "12px 18px", fontSize: "14px", border: u ? "none" : "1px solid var(--card-border)" }}>{msg.content}</div>
+                    <div style={{ maxWidth: "85%", background: u ? "var(--accent)" : "rgba(255, 255, 255, 0.04)", color: u ? "white" : "var(--text-main)", borderRadius: "12px", padding: "12px 18px", fontSize: "14px" }}>{msg.content}</div>
                 </div>
             );
         }
@@ -203,8 +184,8 @@ Structure:
         function StatusBadge({ active, label, color }) {
             return (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 14px", background: "rgba(255,255,255,0.03)", borderRadius: "30px", border: "1px solid var(--card-border)" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: active ? color : "#374151", boxShadow: active ? `0 0 10px ${color}` : "none" }}></div>
-                    <span style={{ fontSize: "11px", fontWeight: "600", color: active ? "white" : "var(--text-muted)", fontFamily: "var(--font-display)", textTransform: "uppercase" }}>{label}</span>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: active ? color : "#374151" }}></div>
+                    <span style={{ fontSize: "11px", fontWeight: "600", color: active ? "white" : "var(--text-muted)", textTransform: "uppercase" }}>{label}</span>
                 </div>
             );
         }
@@ -215,48 +196,35 @@ Structure:
             const [clarityToken, setClarityToken] = useState("");
             const [ga4Id, setGa4Id] = useState("");
             const [ga4Token, setGa4Token] = useState("");
+            const [selectedModel, setSelectedModel] = useState("claude-3-5-sonnet-20241022");
             const [days, setDays] = useState(1);
             const [clarityData, setClarityData] = useState(null);
             const [ga4Data, setGa4Data] = useState(null);
             const [csv, setCsv] = useState(null);
-            const [csvName, setCsvName] = useState("");
             const [loading, setLoading] = useState(false);
-            const [loadingMsg, setLoadingMsg] = useState("");
             const [insights, setInsights] = useState([]);
             const [chat, setChat] = useState([]);
-            const [chatInput, setChatInput] = useState("");
-            const [chatLoading, setChatLoading] = useState(false);
             const [err, setErr] = useState("");
             const fileRef = useRef(null);
-            const endRef = useRef(null);
-
-            useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
 
             async function synchronize() {
                 setLoading(true); setErr(""); setInsights([]);
-                setLoadingMsg("Synchronizing Unified Intelligence...");
-                
                 try {
                     let cData = clarityData;
                     let gData = ga4Data;
 
                     if (clarityToken.trim()) {
-                        setLoadingMsg("Syncing Microsoft Clarity...");
                         const res = await fetchClarityViaProxy(clarityToken.trim(), days);
                         if (!res.error) { setClarityData(res.data); cData = res.data; }
                     }
 
                     if (ga4Id.trim() && ga4Token.trim()) {
-                        setLoadingMsg("Syncing GA4 Report...");
                         const res = await fetchGA4ViaProxy(ga4Id.trim(), ga4Token.trim(), days);
                         if (!res.error) { setGa4Data(res.data); gData = res.data; }
-                        else { setErr(e => e + " | GA4: " + res.error); }
                     }
 
-                    setLoadingMsg("Generating 360° AI Analysis...");
-                    const reply = await analyzeWithClaude(SYSTEM_PROMPT, cData, csv, gData);
-                    const parts = reply.split(/\n(?=\d+\.)/).filter(Boolean);
-                    setInsights(parts.length > 1 ? parts : [reply]);
+                    const reply = await analyzeWithClaude(selectedModel, SYSTEM_PROMPT, cData, csv, gData);
+                    setInsights(reply.split(/\n(?=\d+\.)/).filter(Boolean));
                     setTab("dashboard");
                 } catch (e) { setErr(e.message); } finally { setLoading(false); }
             }
@@ -264,7 +232,6 @@ Structure:
             const cStats = extractStats(clarityData || csv);
             const gStats = ga4Data?.rows ? {
                 users: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[0].value), 0),
-                conversions: ga4Data.rows.reduce((a, b) => a + parseInt(b.metricValues[2].value), 0),
                 bounce: (ga4Data.rows.reduce((a, b) => a + parseFloat(b.metricValues[3].value), 0) / ga4Data.rows.length * 100).toFixed(1)
             } : null;
 
@@ -272,67 +239,39 @@ Structure:
                 <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 30px" }}>
                     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "48px 0 32px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", color: "white" }}>✧</div>
-                            <div>
-                                <h1 style={{ fontSize: "22px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white" }}>Clarity Agent</h1>
-                                <p style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Unified Analytics Hub</p>
-                            </div>
+                            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--accent-gradient)" }}></div>
+                            <h1 style={{ fontSize: "22px", fontWeight: "700", fontFamily: "var(--font-display)", color: "white" }}>Clarity Agent</h1>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-                            <nav style={{ display: "flex", gap: "6px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
-                                {["setup", "dashboard", "chat"].map(t => (
-                                    <button key={t} onClick={() => setTab(t)} style={{ padding: "8px 20px", borderRadius: "9px", border: "none", background: tab === t ? "rgba(255,255,255,0.08)" : "transparent", color: tab === t ? "white" : "var(--text-dim)", fontSize: "13.5px", fontWeight: "600", cursor: "pointer" }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
-                                ))}
-                            </nav>
-                            <div style={{ display: "flex", gap: "12px" }}>
-                                <StatusBadge active={!!clarityData} label="Clarity" color="#10b981" />
-                                <StatusBadge active={!!ga4Data} label="GA4" color="#6366f1" />
-                                <StatusBadge active={!!csv} label="CSV" color="#f59e0b" />
-                            </div>
-                        </div>
+                        <nav style={{ display: "flex", gap: "6px", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px" }}>
+                            {["setup", "dashboard", "chat"].map(t => (
+                                <button key={t} onClick={() => setTab(t)} style={{ padding: "8px 20px", borderRadius: "9px", border: "none", background: tab === t ? "rgba(255,255,255,0.08)" : "transparent", color: tab === t ? "white" : "var(--text-dim)", fontSize: "13.5px", fontWeight: "600" }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+                            ))}
+                        </nav>
                     </header>
 
-                    <main style={{ animation: "fadeIn 0.7s ease-out" }}>
+                    <main>
                         {tab === "setup" && (
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", maxWidth: "1000px", margin: "0 auto" }}>
                                 <div className="glass-card" style={{ padding: "40px" }}>
-                                    <h2 style={{ fontSize: "20px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "24px" }}>Microsoft Clarity</h2>
-                                    <div style={{ marginBottom: "20px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>API Token</label>
-                                        <input className="input-field" type="password" value={clarityToken} onChange={e => setClarityToken(e.target.value)} placeholder="Clarity Data Export Token" />
-                                    </div>
-                                    <div className="secondary-btn" style={{ width: "100%", textAlign: "center" }} onClick={() => fileRef.current?.click()}>
-                                        {csvName ? `✓ ${csvName}` : "Or Upload Historical CSV"}
-                                    </div>
-                                    <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={e => {
-                                        const f = e.target.files[0]; setCsvName(f.name);
-                                        const r = new FileReader(); r.onload = ev => setCsv(parseCSV(ev.target.result)); r.readAsText(f);
-                                    }} />
+                                    <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>Microsoft Clarity</h2>
+                                    <input className="input-field" type="password" value={clarityToken} onChange={e => setClarityToken(e.target.value)} placeholder="API Token" />
                                 </div>
-
                                 <div className="glass-card" style={{ padding: "40px" }}>
-                                    <h2 style={{ fontSize: "20px", fontWeight: "700", fontFamily: "var(--font-display)", marginBottom: "24px" }}>Google Analytics 4</h2>
-                                    <div style={{ marginBottom: "16px" }}>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Property ID</label>
-                                        <input className="input-field" value={ga4Id} onChange={e => setGa4Id(e.target.value)} placeholder="e.g. 123456789" />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}>Access Token</label>
-                                        <input className="input-field" type="password" value={ga4Token} onChange={e => setGa4Token(e.target.value)} placeholder="OAuth2 Access Token" />
-                                    </div>
+                                    <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>Google Analytics 4</h2>
+                                    <input className="input-field" value={ga4Id} onChange={e => setGa4Id(e.target.value)} placeholder="Property ID" style={{ marginBottom: "12px" }} />
+                                    <input className="input-field" type="password" value={ga4Token} onChange={e => setGa4Token(e.target.value)} placeholder="Access Token" />
                                 </div>
-
-                                <div className="glass-card" style={{ gridColumn: "span 2", padding: "32px", textAlign: "center" }}>
-                                    <p style={{ color: "var(--text-dim)", fontSize: "14px", marginBottom: "20px" }}>Select analysis window and begin unified intelligence processing.</p>
-                                    <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "24px" }}>
-                                        {[1, 7, 30].map(d => (
-                                            <button key={d} onClick={() => setDays(d)} style={{ padding: "10px 24px", borderRadius: "8px", border: "1px solid", borderColor: days === d ? "var(--accent)" : "var(--card-border)", background: days === d ? "var(--accent-glow)" : "transparent", color: days === d ? "white" : "var(--text-dim)", cursor: "pointer" }}>{d}d</button>
-                                        ))}
-                                    </div>
-                                    {err && <p style={{ color: "#fca5a5", fontSize: "13px", marginBottom: "20px" }}>{err}</p>}
-                                    <button className="premium-btn" style={{ width: "400px" }} onClick={synchronize} disabled={loading}>
-                                        {loading ? loadingMsg : "Start Unified Analysis →"}
-                                    </button>
+                                <div className="glass-card" style={{ gridColumn: "span 2", padding: "40px" }}>
+                                    <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>AI Engine Configuration</h2>
+                                    <select className="input-field" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ marginBottom: "20px" }}>
+                                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Oct 2024)</option>
+                                        <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (June 2024)</option>
+                                        <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet (Latest)</option>
+                                        <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                                        <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                                    </select>
+                                    <button className="premium-btn" style={{ width: "100%" }} onClick={synchronize} disabled={loading}>{loading ? "Analyzing..." : "Begin Unified Analysis →"}</button>
+                                    {err && <p style={{ color: "#fca5a5", fontSize: "13px", marginTop: "16px" }}>{err}</p>}
                                 </div>
                             </div>
                         )}
@@ -340,32 +279,13 @@ Structure:
                         {tab === "dashboard" && (
                             <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
-                                    <Stat icon="👥" label="Live Users (GA4)" value={gStats?.users.toLocaleString() || "—"} sub="Active on platform" color="#6366f1" />
-                                    <Stat icon="🎯" label="Conversions" value={gStats?.conversions.toLocaleString() || "—"} sub={`${gStats?.bounce || 0}% Bounce Rate`} color="#8b5cf6" />
-                                    <Stat icon="😤" label="Rage Clicks (Clarity)" value={cStats?.rageClicks.toLocaleString() || "—"} sub="Friction signals" color="#ec4899" />
-                                    <Stat icon="🖱️" label="Dead Clicks" value={cStats?.deadClicks.toLocaleString() || "—"} sub="UX dead ends" color="#f59e0b" />
+                                    <Stat icon="👥" label="Users (GA4)" value={gStats?.users.toLocaleString() || "—"} sub={`${gStats?.bounce || 0}% Bounce`} color="#6366f1" />
+                                    <Stat icon="😤" label="Rage Clicks" value={cStats?.rageClicks.toLocaleString() || "—"} sub="Friction" color="#ec4899" />
                                 </div>
-
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "40px" }}>
-                                    <section>
-                                        <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.1em" }}>360° AI Recommendations</h3>
-                                        {insights.length === 0 ? <p style={{ color: "var(--text-dim)" }}>Synchronize data to see unified insights.</p> : insights.map((t, i) => <div key={i} className="glass-card" style={{ padding: "20px", marginBottom: "14px", borderLeft: "4px solid var(--accent)" }}>{t}</div>)}
-                                    </section>
-                                    <aside className="glass-card" style={{ padding: "24px", height: "500px", display: "flex", flexDirection: "column" }}>
-                                        <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "20px", textTransform: "uppercase" }}>Unified Consultant</h3>
-                                        <div style={{ flex: 1, overflowY: "auto", marginBottom: "20px" }}>
-                                            {chat.map((m, i) => <Bubble key={i} msg={m} />)}
-                                            <div ref={endRef} />
-                                        </div>
-                                        <input className="input-field" placeholder="Ask about combined data..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={async e => {
-                                            if (e.key === "Enter" && chatInput.trim()) {
-                                                const m = chatInput; setChatInput(""); setChat(p => [...p, { role: "user", content: m }]);
-                                                const r = await analyzeWithClaude(SYSTEM_PROMPT, clarityData, csv, ga4Data, [...chat, { role: "user", content: m }]);
-                                                setChat(p => [...p, { role: "assistant", content: r }]);
-                                            }
-                                        }} />
-                                    </aside>
-                                </div>
+                                <section>
+                                    <h3 style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "16px", textTransform: "uppercase" }}>AI Recommendations</h3>
+                                    {insights.map((t, i) => <div key={i} className="glass-card" style={{ padding: "20px", marginBottom: "14px", borderLeft: "4px solid var(--accent)" }}>{t}</div>)}
+                                </section>
                             </div>
                         )}
                     </main>

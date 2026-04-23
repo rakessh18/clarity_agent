@@ -137,11 +137,36 @@
 
         // ── Helpers ──────────────────────────────────────────────────────────────────
         function parseCSV(text) {
-            const lines = text.trim().split("\n");
+            const cleanText = text.replace(/^\uFEFF/, "");
+            const lines = cleanText.split(/\r?\n/).filter(line => line.trim() !== "");
             if (lines.length < 2) return [];
-            const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
-            return lines.slice(1).map((line) => {
-                const vals = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+
+            let headerIndex = 0;
+            for (let i = 0; i < Math.min(lines.length, 10); i++) {
+                const low = lines[i].toLowerCase();
+                if (low.includes("session") || low.includes("metric") || low.includes("page view") || low.includes("rage")) {
+                    headerIndex = i;
+                    break;
+                }
+            }
+
+            const delimiter = lines[headerIndex].includes(";") ? ";" : ",";
+            const parseLine = (line) => {
+                const result = [];
+                let cur = "", inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === delimiter && !inQuotes) { result.push(cur.trim()); cur = ""; }
+                    else cur += char;
+                }
+                result.push(cur.trim());
+                return result.map(v => v.replace(/^"|"$/g, "").trim());
+            };
+
+            const headers = parseLine(lines[headerIndex]);
+            return lines.slice(headerIndex + 1).map((line) => {
+                const vals = parseLine(line);
                 return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]));
             });
         }

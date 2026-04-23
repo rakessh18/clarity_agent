@@ -52,8 +52,10 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         if (!response.ok) {
+            const errorType = data.error?.type || "unknown_error";
+            const errorMsg = data.error?.message || response.statusText;
             return res.status(response.status).json({
-                error: `Anthropic rejected request: ${data.error?.message || response.statusText}`,
+                error: `Anthropic Error (${errorType}): ${errorMsg}`,
                 details: data
             });
         }

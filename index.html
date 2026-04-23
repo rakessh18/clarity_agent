@@ -181,14 +181,20 @@
             rows.forEach((r) => {
                 const getVal = (keys) => {
                     for (const k of keys) {
-                        if (r[k] !== undefined) return parseInt(r[k]) || 0;
-                        const found = Object.keys(r).find(key => key.toLowerCase().replace(/\s/g, '') === k.toLowerCase());
-                        if (found) return parseInt(r[found]) || 0;
+                        if (r[k] !== undefined && r[k] !== "") return parseInt(r[k]) || 0;
+                        const found = Object.keys(r).find(key => {
+                            const clean = key.toLowerCase().replace(/\s/g, '');
+                            const target = k.toLowerCase().replace(/\s/g, '');
+                            return clean === target || clean.includes(target) || target.includes(clean);
+                        });
+                        if (found && r[found] !== "") return parseInt(r[found]) || 0;
                     }
+                    const fallback = Object.keys(r).find(k => k.toLowerCase().includes("total") || k.toLowerCase().includes("count") || k.toLowerCase().includes("value"));
+                    if (fallback && r[fallback] !== "") return parseInt(r[fallback]) || 0;
                     return 0;
                 };
 
-                sessions += getVal(["sessions", "totalSessions", "sessionsCount", "TotalSessions"]);
+                sessions += getVal(["sessions", "totalSessions", "sessionsCount", "TotalSessions", "Total"]);
                 pageViews += getVal(["pageViews", "totalPageViews", "PageViews", "TotalPageViews"]);
                 rageClicks += getVal(["rageClicks", "rageClickCount", "RageClicks", "RageTapCount"]);
                 deadClicks += getVal(["deadClicks", "deadClickCount", "DeadClicks", "DeadTapCount"]);
